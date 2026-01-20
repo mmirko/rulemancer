@@ -3,13 +3,17 @@ Copyright © 2025 Mirko Mariotti mirko@mirkomariotti.it
 */
 package rulemancer
 
+import "sync"
+
 type Engine struct {
-	// Add fields as necessary for the engine's state and configuration
+	rooms      map[string]*Room
+	roomsMutex sync.RWMutex
 }
 
 func NewEngine() *Engine {
 	return &Engine{
-		// Initialize fields as necessary
+		rooms:      make(map[string]*Room),
+		roomsMutex: sync.RWMutex{},
 	}
 }
 
