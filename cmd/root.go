@@ -26,8 +26,8 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "rulemancer",
-	Short: "CLIPS-based Engine for Magik the Gathering rules management",
-	Long:  `rulemancer is a CLIPS-based go application to manage Magik the Gathering rules and cards interactions.`,
+	Short: "CLIPS-based Engine for Magic the Gathering rules management",
+	Long:  `rulemancer is a CLIPS-based go application to manage Magic the Gathering rules and cards interactions.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
