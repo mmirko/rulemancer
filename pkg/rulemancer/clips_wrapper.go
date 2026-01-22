@@ -22,14 +22,16 @@ import (
 type ClipsInstance struct {
 	e     *Engine
 	cl    unsafe.Pointer
-	sChan chan struct{}
-	qChan chan struct{}
+	sChan chan struct{} // serialize channel
+	rChan chan struct{} // response channel
+	qChan chan struct{} // quit channel
 }
 
 func (e *Engine) NewClipsInstance() *ClipsInstance {
 	return &ClipsInstance{
 		e:     e,
 		sChan: make(chan struct{}),
+		rChan: make(chan struct{}),
 		qChan: make(chan struct{}),
 	}
 }
@@ -73,6 +75,7 @@ func (ci *ClipsInstance) spawnSerializer() {
 		for {
 			select {
 			case ci.sChan <- struct{}{}:
+				<-ci.rChan
 				// Every time a request is made, this channel will be read to ensure serialized access
 			case ci.qChan <- struct{}{}:
 				// On dispose, exit the goroutine
@@ -90,13 +93,15 @@ func (ci *ClipsInstance) Info() map[string]string {
 		}
 	}
 	<-ci.sChan
-	return map[string]string{
+	response := map[string]string{
 		"status":        "running",
 		"engine":        "CLIPS",
 		"version":       "6.40",
 		"rule_pool":     ci.e.RulePool,
 		"instance_addr": fmt.Sprintf("%p", ci.cl),
 	}
+	ci.rChan <- struct{}{}
+	return response
 }
 
 func (ci *ClipsInstance) AssertFact(fact string) error {
@@ -105,6 +110,8 @@ func (ci *ClipsInstance) AssertFact(fact string) error {
 		return fmt.Errorf("CLIPS instance not initialized")
 	}
 	<-ci.sChan
+	// Logic to assert the fact
+	ci.rChan <- struct{}{}
 	return nil
 }
 
@@ -115,6 +122,7 @@ func (ci *ClipsInstance) Run() error {
 	}
 	<-ci.sChan
 	C.clips_run(ci.cl)
+	ci.rChan <- struct{}{}
 	return nil
 }
 
@@ -124,6 +132,8 @@ func (ci *ClipsInstance) QueryFacts(pattern string) ([]string, error) {
 		return nil, fmt.Errorf("CLIPS instance not initialized")
 	}
 	<-ci.sChan
+	// Logic to query facts
+	ci.rChan <- struct{}{}
 	return nil, nil
 }
 
