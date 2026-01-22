@@ -14,7 +14,7 @@ var serveCmd = &cobra.Command{
 	Long: `Spawn an engine and serve it over a TCP socket. rulemancer 
 	supervises the execution of the engine until it terminates. `,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := e.SpawnEngine(c, rulePool); err != nil {
+		if err := e.SpawnEngine(); err != nil {
 			cmd.Println("Failed to spawn engine:")
 			cmd.Println(err.Error())
 			return

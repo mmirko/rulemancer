@@ -33,11 +33,12 @@ var rootCmd = &cobra.Command{
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-var cfgFile string  // config file
-var rulePool string // Knowledge base pool, used to store the knowledge base in form of a Prolog files
-var testPool string // Test pool, used to store test files
+var cfgFile string     // config file
+var rulePool string    // Knowledge base pool, used to store the knowledge base in form of a Prolog files
+var testPool string    // Test pool, used to store test files
+var TLSCertFile string // TLS Certificate file
+var TLSKeyFile string  // TLS Key file
 
-var c *rulemancer.Config // Config object
 var e *rulemancer.Engine // Engine object
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -55,21 +56,32 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "rulemancer.json", "config file (default rulemancer.json)")
-
 	rootCmd.PersistentFlags().StringVarP(&rulePool, "rulepool", "k", "rulepool", "Knowledge base pool directory (default rulepool)")
-
 	rootCmd.PersistentFlags().StringVarP(&testPool, "testpool", "t", "testpool", "Test pool directory (default testpool)")
+	rootCmd.PersistentFlags().StringVarP(&TLSCertFile, "tlscert", "", "server.crt", "TLS Certificate file (default server.crt)")
+	rootCmd.PersistentFlags().StringVarP(&TLSKeyFile, "tlskey", "", "server.key", "TLS Key file (default server.key)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 
-	c = rulemancer.NewConfig()
 	e = rulemancer.NewEngine()
 
 	if cfgFile != "" {
-		err := c.LoadConfig(cfgFile)
+		err := e.LoadConfig(cfgFile)
 		if err != nil {
 			log.Fatalf("Error loading config file: %v", err)
 		}
+	}
+
+	// Override rule pool if specified
+	if rulePool != "" {
+		e.RulePool = rulePool
+	}
+	// Override TLS cert and key if specified
+	if TLSCertFile != "" {
+		e.TLSCertFile = TLSCertFile
+	}
+	if TLSKeyFile != "" {
+		e.TLSKeyFile = TLSKeyFile
 	}
 }

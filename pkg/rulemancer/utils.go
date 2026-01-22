@@ -1,3 +1,6 @@
+/*
+Copyright © 2026 Mirko Mariotti mirko@mirkomariotti.it
+*/
 package rulemancer
 
 import "math/rand"

@@ -28,6 +28,8 @@ go.work.sum
 .env
 
 core
+server.crt
+server.key
 
 # Editor/IDE
 # .idea/

@@ -1,3 +1,8 @@
 {
-	"debug": false
+	"debug": false,
+	"tls_cert_file": "server.crt",
+	"tls_key_file": "server.key",
+	"rule_pool": "rulepool",
+	"clipsless_mode": false
 }
+

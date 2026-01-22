@@ -1,5 +1,5 @@
 /*
-Copyright © 2025 Mirko Mariotti mirko@mirkomariotti.it
+Copyright © 2026 Mirko Mariotti mirko@mirkomariotti.it
 */
 package rulemancer
 
@@ -10,12 +10,20 @@ import (
 )
 
 type Config struct {
-	Debug bool `json:"debug"`
+	ClipsLessMode bool   `json:"clipsless_mode"`
+	Debug         bool   `json:"debug"`
+	TLSCertFile   string `json:"tls_cert_file"`
+	TLSKeyFile    string `json:"tls_key_file"`
+	RulePool      string `json:"rule_pool"`
 }
 
 func NewConfig() *Config {
 	return &Config{
-		Debug: false,
+		ClipsLessMode: false,
+		Debug:         false,
+		TLSCertFile:   "server.crt",
+		TLSKeyFile:    "server.key",
+		RulePool:      "rulepool",
 	}
 }
 
