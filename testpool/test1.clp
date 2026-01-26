@@ -1,1 +1,1 @@
-(persona (nome Mario) (eta 42))
+(move (x 1) (y 1) (player x))

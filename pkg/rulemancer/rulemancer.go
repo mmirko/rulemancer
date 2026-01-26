@@ -10,11 +10,14 @@ import (
 )
 
 type Config struct {
-	ClipsLessMode bool   `json:"clipsless_mode"`
-	Debug         bool   `json:"debug"`
-	TLSCertFile   string `json:"tls_cert_file"`
-	TLSKeyFile    string `json:"tls_key_file"`
-	RulePool      string `json:"rule_pool"`
+	ClipsLessMode bool     `json:"clipsless_mode"`
+	Debug         bool     `json:"debug"`
+	TLSCertFile   string   `json:"tls_cert_file"`
+	TLSKeyFile    string   `json:"tls_key_file"`
+	RulePool      string   `json:"rule_pool"`
+	Assertables   []string `json:"assertables"`
+	Results       []string `json:"results"`
+	Querables     []string `json:"querables"`
 }
 
 func NewConfig() *Config {
