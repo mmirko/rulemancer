@@ -11,11 +11,13 @@ void clips_load(void*, const char*);
 void clips_reset(void*);
 void clips_run(void*);
 void clips_assert(void*, const char*);
+char* find_facts_as_string(void*, const char*);
 */
 import "C"
 import (
 	"fmt"
 	"os"
+	"strings"
 	"unsafe"
 )
 
@@ -110,7 +112,9 @@ func (ci *ClipsInstance) AssertFact(fact string) error {
 		return fmt.Errorf("CLIPS instance not initialized")
 	}
 	<-ci.sChan
-	// Logic to assert the fact
+	cFact := C.CString(fact)
+	defer C.free(unsafe.Pointer(cFact))
+	C.clips_assert(ci.cl, cFact)
 	ci.rChan <- struct{}{}
 	return nil
 }
@@ -126,15 +130,21 @@ func (ci *ClipsInstance) Run() error {
 	return nil
 }
 
-func (ci *ClipsInstance) QueryFacts(pattern string) ([]string, error) {
+func (ci *ClipsInstance) QueryFacts(relation string) ([]string, error) {
 	// Query facts matching the pattern
 	if ci.cl == nil {
 		return nil, fmt.Errorf("CLIPS instance not initialized")
 	}
 	<-ci.sChan
-	// Logic to query facts
+	cRelation := C.CString(relation)
+	defer C.free(unsafe.Pointer(cRelation))
+	facts := C.find_facts_as_string(ci.cl, cRelation)
+	defer C.free(unsafe.Pointer(facts))
+	goFacts := C.GoString(facts)
+	fmt.Println("Queried facts:", goFacts)
+	factsList := strings.Split(goFacts, "\n")
 	ci.rChan <- struct{}{}
-	return nil, nil
+	return factsList, nil
 }
 
 func (ci *ClipsInstance) Dispose() {

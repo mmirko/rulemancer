@@ -23,3 +23,27 @@ void clips_run(void* env) {
 void clips_assert(void* env, const char* fact) {
     AssertString(env, fact);
 }
+
+char *find_facts_as_string(void *env, const char *fact_name) {
+    Fact *fact = GetNextFact(env, NULL);
+
+    StringBuilder *sb = CreateStringBuilder(env, 1024);
+    if (!sb) return NULL;
+
+    while (fact != NULL) {
+        CLIPSLexeme *rel = FactRelation(fact);
+        const char *relation = rel ? rel->contents : NULL;
+
+        // if (relation && strcmp(relation, fact_name) == 0) {
+            FactPPForm(fact, sb, false);
+            AppendStrings(env, sb->contents,"");
+        // }
+
+        fact = GetNextFact(env,fact);
+    }
+
+    char *result = CopyString(env, sb->contents);
+
+    SBDispose(sb);
+    return result;
+}
