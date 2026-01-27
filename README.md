@@ -1,8 +1,6 @@
 # Rulemancer
 
-<center>
-<img src="logo.png" alt="Rulemancer Logo"/>
-</center>
+![Logo](./logo.png){ style="display: block; margin: 0 auto" }
 
 A Go application that embeds the CLIPS expert system engine to power rules-based games. Define game logic using CLIPS (an expressive rule/fact inference engine), then interact with it via HTTP or CLI.
 
