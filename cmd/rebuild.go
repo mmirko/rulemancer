@@ -10,9 +10,8 @@ import (
 // rebuildCmd represents the rebuild command
 var rebuildCmd = &cobra.Command{
 	Use:   "rebuild",
-	Short: "Rebuild the engine",
-	Long: `Rebuild the engine from source. rulemancer 
-	supervises the execution of the rebuild process until it terminates. `,
+	Short: "Rebuild the engine (experimental)",
+	Long:  `Rewrite some parts of the engine's internal state and data structures parsing the rules database. This is an experimental feature and may not work as expected.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := e.RebuildEngine(); err != nil {
 			cmd.Println("Failed to rebuild engine:")

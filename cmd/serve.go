@@ -11,8 +11,7 @@ import (
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Serve the engine",
-	Long: `Spawn an engine and serve it over a TCP socket. rulemancer 
-	supervises the execution of the engine until it terminates. `,
+	Long:  `Spawn the engine and serve it over an HTTP API.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := e.SpawnEngine(); err != nil {
 			cmd.Println("Failed to spawn engine:")
