@@ -44,8 +44,10 @@ func (e *Engine) SpawnEngine() error {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	if e.Debug {
+		r.Use(middleware.Logger)
+	}
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Route("/system", e.systemRoutes)

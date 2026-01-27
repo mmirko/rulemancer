@@ -11,8 +11,3 @@ func move2ClipsAssert(move Move) string {
 		string(rune('0'+move.X)) + `) (y ` +
 		string(rune('0'+move.Y)) + `))`
 }
-
-func clipsAssert2MoveResult(clipsOutput string) (MoveResult, error) {
-	var result MoveResult
-	return result, nil
-}

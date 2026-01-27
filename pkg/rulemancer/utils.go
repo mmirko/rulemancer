@@ -3,9 +3,23 @@ Copyright © 2026 Mirko Mariotti mirko@mirkomariotti.it
 */
 package rulemancer
 
-import "math/rand"
+import (
+	"io"
+	"math/rand"
+	"strings"
+	"time"
+)
 
 const letterBytes = "0123456789abcdef"
+
+type writer struct {
+	io.Writer
+	timeFormat string
+}
+
+func (w writer) Write(b []byte) (n int, err error) {
+	return w.Writer.Write(append([]byte(time.Now().Format(w.timeFormat)), b...))
+}
 
 func RandStringBytes(n int) string {
 	b := make([]byte, n)
@@ -13,4 +27,27 @@ func RandStringBytes(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+func sanitizeFacts(facts string) string {
+	// Remove any \n characters
+	facts = strings.ReplaceAll(facts, "\n", "")
+	return strings.TrimSpace(facts)
+}
+
+func yellow(s string) string {
+	return "\033[33m" + s + "\033[0m"
+}
+
+func red(s string) string {
+	return "\033[31m" + s + "\033[0m"
+}
+
+func elementsInSlice(slice []string, element string) bool {
+	for _, v := range slice {
+		if v == element {
+			return true
+		}
+	}
+	return false
 }

@@ -7,8 +7,8 @@ ROOM_ID="${1:?usage: $0 <room_id>}"
 
 payload=$(cat <<EOF
 {
-  "x": 1,
-  "y": 1,
+  "x": 3,
+  "y": 3,
   "player": "x"
 }
 EOF

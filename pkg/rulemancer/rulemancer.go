@@ -10,14 +10,14 @@ import (
 )
 
 type Config struct {
-	ClipsLessMode bool     `json:"clipsless_mode"`
-	Debug         bool     `json:"debug"`
-	TLSCertFile   string   `json:"tls_cert_file"`
-	TLSKeyFile    string   `json:"tls_key_file"`
-	RulePool      string   `json:"rule_pool"`
-	Assertables   []string `json:"assertables"`
-	Results       []string `json:"results"`
-	Querables     []string `json:"querables"`
+	ClipsLessMode bool                `json:"clipsless_mode"`
+	Debug         bool                `json:"debug"`
+	TLSCertFile   string              `json:"tls_cert_file"`
+	TLSKeyFile    string              `json:"tls_key_file"`
+	RulePool      string              `json:"rule_pool"`
+	Assertables   []string            `json:"assertables"`
+	Results       map[string][]string `json:"results"`
+	Querables     []string            `json:"querables"`
 }
 
 func NewConfig() *Config {
@@ -69,4 +69,16 @@ func (c *Config) LoadConfig(path string) error {
 func (c *Config) ShowConfig() {
 	fmt.Println("Current configuration:")
 	fmt.Printf("Debug: %v\n", c.Debug)
+}
+
+// responseForType returns the list of status queries for a given assert type
+func (c *Config) responseForType(assertType string) ([]string, error) {
+	if c == nil {
+		return nil, fmt.Errorf("config is nil")
+	}
+	if val, ok := c.Results[assertType]; ok {
+		return val, nil
+	} else {
+		return nil, fmt.Errorf("unknown assert type: %s", assertType)
+	}
 }

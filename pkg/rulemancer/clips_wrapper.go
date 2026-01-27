@@ -12,12 +12,13 @@ void clips_reset(void*);
 void clips_run(void*);
 void clips_assert(void*, const char*);
 char* find_facts_as_string(void*, const char*);
+char* find_all_facts_as_string(void*);
 */
 import "C"
 import (
 	"fmt"
+	"log"
 	"os"
-	"strings"
 	"unsafe"
 )
 
@@ -130,21 +131,40 @@ func (ci *ClipsInstance) Run() error {
 	return nil
 }
 
-func (ci *ClipsInstance) QueryFacts(relation string) ([]string, error) {
+func (ci *ClipsInstance) QueryFacts(relation string) (string, error) {
 	// Query facts matching the pattern
 	if ci.cl == nil {
-		return nil, fmt.Errorf("CLIPS instance not initialized")
+		return "", fmt.Errorf("CLIPS instance not initialized")
 	}
 	<-ci.sChan
 	cRelation := C.CString(relation)
 	defer C.free(unsafe.Pointer(cRelation))
 	facts := C.find_facts_as_string(ci.cl, cRelation)
 	defer C.free(unsafe.Pointer(facts))
-	goFacts := C.GoString(facts)
-	fmt.Println("Queried facts:", goFacts)
-	factsList := strings.Split(goFacts, "\n")
+	goFacts := sanitizeFacts(C.GoString(facts))
+	if ci.e.Debug {
+		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/QueryFacts]")+" ", 0)
+		l.Println("Queried facts raw:", goFacts)
+	}
 	ci.rChan <- struct{}{}
-	return factsList, nil
+	return goFacts, nil
+}
+
+func (ci *ClipsInstance) QueryFactsAllFacts() (string, error) {
+	// Query all facts
+	if ci.cl == nil {
+		return "", fmt.Errorf("CLIPS instance not initialized")
+	}
+	<-ci.sChan
+	facts := C.find_all_facts_as_string(ci.cl)
+	defer C.free(unsafe.Pointer(facts))
+	goFacts := sanitizeFacts(C.GoString(facts))
+	if ci.e.Debug {
+		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/QueryFactsAllFacts]")+" ", 0)
+		l.Println("Queried all facts raw:", goFacts)
+	}
+	ci.rChan <- struct{}{}
+	return goFacts, nil
 }
 
 func (ci *ClipsInstance) Dispose() {

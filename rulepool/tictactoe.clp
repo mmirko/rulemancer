@@ -15,6 +15,9 @@
 (deftemplate turn
   (slot player)) ; x o o
 
+(deftemplate winner
+  (slot player)) ; x | o
+
 (deftemplate state
   (slot phase)) ; playing | ended
 
@@ -66,7 +69,47 @@
   (assert (last-move (valid yes) (reason "Move accepted.")))
   (assert (cell (x ?x) (y ?y) (value ?p))))
 
-(defrule last-move-show
-  ?l <- (last-move (valid ?v) (reason ?r))
+;(defrule last-move-show
+;  ?l <- (last-move (valid ?v) (reason ?r))
+;  =>
+;  (printout t "Last move valid: " ?v ", Reason: " ?r crlf))
+
+(defrule win-row
+  ?c1 <- (cell (x 1) (y ?y) (value ?p))
+  ?c2 <- (cell (x 2) (y ?y) (value ?p))
+  ?c3 <- (cell (x 3) (y ?y) (value ?p))
+  ?s <- (state (phase playing))
   =>
-  (printout t "Last move valid: " ?v ", Reason: " ?r crlf))
+  (retract ?s)
+  (assert (state (phase ended)))
+  (assert (winner (player ?p))))
+
+(defrule win-column
+  ?c1 <- (cell (x ?x) (y 1) (value ?p))
+  ?c2 <- (cell (x ?x) (y 2) (value ?p))
+  ?c3 <- (cell (x ?x) (y 3) (value ?p))
+  ?s <- (state (phase playing))
+  =>
+  (retract ?s)
+  (assert (state (phase ended)))
+  (assert (winner (player ?p))))
+
+(defrule win-diagonal-1
+  ?c1 <- (cell (x 1) (y 1) (value ?p))
+  ?c2 <- (cell (x 2) (y 2) (value ?p))
+  ?c3 <- (cell (x 3) (y 3) (value ?p))
+  ?s <- (state (phase playing))
+  =>
+  (retract ?s)
+  (assert (state (phase ended)))
+  (assert (winner (player ?p))))
+
+(defrule win-diagonal-2
+  ?c1 <- (cell (x 1) (y 3) (value ?p))
+  ?c2 <- (cell (x 2) (y 2) (value ?p))
+  ?c3 <- (cell (x 3) (y 1) (value ?p))
+  ?s <- (state (phase playing))
+  =>
+  (retract ?s)
+  (assert (state (phase ended)))
+  (assert (winner (player ?p))))

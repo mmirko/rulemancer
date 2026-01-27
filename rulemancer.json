@@ -4,8 +4,10 @@
 	"tls_key_file": "server.key",
 	"rule_pool": "rulepool",
 	"clipsless_mode": false,
-	"assaertables": ["move"],
-	"results": ["last-move"],
-	"querables": []
+	"assertables": ["move"],
+	"results": {
+		"move": ["last-move"]
+	},
+	"querables": ["cell","winner"]
 }
 
