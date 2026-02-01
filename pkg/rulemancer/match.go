@@ -1,14 +1,10 @@
-package game
+package rulemancer
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
 )
-
-type Config struct {
-	Debug bool
-}
 
 func DecodeOneOf[T any](c *Config, data []byte, targets ...*T) (*T, error) {
 	for _, t := range targets {

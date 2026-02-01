@@ -14,6 +14,7 @@ type Config struct {
 	Debug         bool                `json:"debug"`
 	TLSCertFile   string              `json:"tls_cert_file"`
 	TLSKeyFile    string              `json:"tls_key_file"`
+	Games         []string            `json:"games"`
 	RulePool      string              `json:"rule_pool"`
 	Assertables   []string            `json:"assertables"`
 	Results       map[string][]string `json:"results"`
