@@ -4,6 +4,9 @@ Copyright © 2025 Mirko Mariotti mirko@mirkomariotti.it
 package cmd
 
 import (
+	"log"
+	"os"
+
 	"github.com/spf13/cobra"
 )
 
@@ -13,6 +16,10 @@ var serveCmd = &cobra.Command{
 	Short: "Serve the engine",
 	Long:  `Spawn the engine and serve it over an HTTP API.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[cmd/serve]")+" ", 0)
+			l.Println("Starting engine in debug mode...")
+		}
 		if err := e.SpawnEngine(); err != nil {
 			cmd.Println("Failed to spawn engine:")
 			cmd.Println(err.Error())

@@ -3,16 +3,28 @@ Copyright © 2026 Mirko Mariotti mirko@mirkomariotti.it
 */
 package rulemancer
 
-import "errors"
+import (
+	"errors"
+)
 
 type Room struct {
 	name          string
 	description   string
 	id            string
+	game          *Game
+	clients       []*Client
 	clipsInstance *ClipsInstance
 }
 
-func (e *Engine) newRoom(name, description string) (*Room, error) {
+func (e *Engine) newRoom(name, description, gameRef string) (*Room, error) {
+
+	game, err := e.searchGame(gameRef)
+	if err != nil {
+		return nil, err
+	}
+
+	rulesLocation := game.rulesLocation
+
 	// Ensure unique ID generation and locking on the rooms map
 	var cli *ClipsInstance
 	if !e.ClipsLessMode {
@@ -20,7 +32,7 @@ func (e *Engine) newRoom(name, description string) (*Room, error) {
 		if err := cli.InitClips(); err != nil {
 			return nil, err
 		}
-		if err := cli.LoadKnowledgeBase(); err != nil {
+		if err := cli.loadGame(rulesLocation); err != nil {
 			cli.Dispose()
 			return nil, err
 		}
@@ -30,14 +42,15 @@ func (e *Engine) newRoom(name, description string) (*Room, error) {
 	room := &Room{
 		name:          name,
 		description:   description,
-		id:            e.generateUniqueID(),
+		id:            e.generateRoomUniqueID(),
+		game:          game,
 		clipsInstance: cli,
 	}
 	e.rooms[room.id] = room
 	return room, nil
 }
 
-func (e *Engine) generateUniqueID() string {
+func (e *Engine) generateRoomUniqueID() string {
 	for {
 		newId := RandStringBytes(16)
 		if _, exists := e.rooms[newId]; !exists {

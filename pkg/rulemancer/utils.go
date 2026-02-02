@@ -43,6 +43,14 @@ func red(s string) string {
 	return "\033[31m" + s + "\033[0m"
 }
 
+func purple(s string) string {
+	return "\033[35m" + s + "\033[0m"
+}
+
+func cyan(s string) string {
+	return "\033[36m" + s + "\033[0m"
+}
+
 func elementsInSlice(slice []string, element string) bool {
 	for _, v := range slice {
 		if v == element {

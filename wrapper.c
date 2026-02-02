@@ -66,3 +66,9 @@ char * find_all_facts_as_string(void *env) {
     SBDispose(sb);
     return result;
 }
+
+void clips_free_string(void *env,char *str) {
+    if (str != NULL) {
+        rm(env, str, strlen(str)+1);
+    }
+}

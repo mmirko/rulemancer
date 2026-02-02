@@ -6,18 +6,21 @@ package rulemancer
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 )
 
+const (
+	debugLevelMax = 10
+)
+
 type Config struct {
-	ClipsLessMode bool                `json:"clipsless_mode"`
-	Debug         bool                `json:"debug"`
-	TLSCertFile   string              `json:"tls_cert_file"`
-	TLSKeyFile    string              `json:"tls_key_file"`
-	RulePool      string              `json:"rule_pool"`
-	Assertables   []string            `json:"assertables"`
-	Results       map[string][]string `json:"results"`
-	Querables     []string            `json:"querables"`
+	ClipsLessMode bool     `json:"clipsless_mode"`
+	Debug         bool     `json:"debug"`
+	DebugLevel    int      `json:"debug_level"`
+	TLSCertFile   string   `json:"tls_cert_file"`
+	TLSKeyFile    string   `json:"tls_key_file"`
+	Games         []string `json:"games"`
 }
 
 func NewConfig() *Config {
@@ -26,7 +29,7 @@ func NewConfig() *Config {
 		Debug:         false,
 		TLSCertFile:   "server.crt",
 		TLSKeyFile:    "server.key",
-		RulePool:      "rulepool",
+		Games:         []string{},
 	}
 }
 
@@ -45,6 +48,10 @@ func (c *Config) SaveConfig(path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to write config to file: %w", err)
 	}
+	if c.Debug {
+		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/SaveConfig]")+" ", 0)
+		l.Printf("Saved configuration to %s", path)
+	}
 	return nil
 }
 
@@ -62,23 +69,9 @@ func (c *Config) LoadConfig(path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
+	if c.Debug {
+		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/LoadConfig]")+" ", 0)
+		l.Printf("Loading configuration from %s", path)
+	}
 	return nil
-}
-
-// ShowConfig prints the current configuration to the console
-func (c *Config) ShowConfig() {
-	fmt.Println("Current configuration:")
-	fmt.Printf("Debug: %v\n", c.Debug)
-}
-
-// responseForType returns the list of status queries for a given assert type
-func (c *Config) responseForType(assertType string) ([]string, error) {
-	if c == nil {
-		return nil, fmt.Errorf("config is nil")
-	}
-	if val, ok := c.Results[assertType]; ok {
-		return val, nil
-	} else {
-		return nil, fmt.Errorf("unknown assert type: %s", assertType)
-	}
 }

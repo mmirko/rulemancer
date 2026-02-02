@@ -13,60 +13,81 @@ import (
 
 func (e *Engine) querySubRoutes(r chi.Router) {
 	r.Route("/", func(r chi.Router) {
-		r.Post("/{relation}", e.apiQuery)
+		r.Post("/{query}", e.apiQuery)
 	})
 }
 
 func (e *Engine) apiQuery(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	statusItem := chi.URLParam(r, "relation")
+	query := chi.URLParam(r, "query")
 
 	if room, err := e.searchRoom(id); err != nil {
 		Error(w, http.StatusNotFound, "room not found")
 		return
 	} else {
 
-		if !elementsInSlice(e.Config.Querables, statusItem) {
+		ci := room.clipsInstance
+		if relList, ok := room.game.queryable[query]; !ok {
 			if e.Debug {
 				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiQuery]")+" ", 0)
-				l.Printf("Relation not querable in room %s: %s", id, statusItem)
+				l.Printf("Query not found for room %s: %s", id, query)
 			}
-			Error(w, http.StatusBadRequest, "relation not querable")
+			Error(w, http.StatusNotFound, "query not found")
 			return
-		}
-
-		response := make(map[string][]map[string]string)
-
-		if e.Debug {
-			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiQuery]")+" ", 0)
-			l.Printf("Querying status in room %s: %s", id, statusItem)
-		}
-		if factList, err := room.clipsInstance.QueryFacts(statusItem); err != nil {
+		} else if len(relList) == 0 {
 			if e.Debug {
 				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiQuery]")+" ", 0)
-				l.Printf("Error querying status in room %s - %s: %v", id, statusItem, err)
+				l.Printf("No relations for query in room %s: %s", id, query)
 			}
-			Error(w, http.StatusInternalServerError, "failed to query status")
+			Error(w, http.StatusNotFound, "no relations for query")
 			return
 		} else {
-			if e.Debug {
-				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiQuery]")+" ", 0)
-				l.Printf("Status in room %s - %s: %+v", id, statusItem, factList)
-			}
-			if factMap, err := genericFactToMap(e.Config, statusItem, factList); err != nil {
-				if e.Debug {
-					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiQuery]")+" ", 0)
-					l.Printf("Error converting fact to struct in room %s - %s: %v", id, statusItem, err)
-				}
-				Error(w, http.StatusInternalServerError, "failed to convert fact to struct")
-				return
-			} else {
-				response[statusItem] = factMap
-			}
-		}
-		JSON(w, http.StatusOK, map[string]any{
-			"response": response,
-		})
 
+			// Aggregate all facts from all relations, the loop is split to limit the lock time
+			allFacts := make([]string, len(relList))
+			ci.Lock()
+			for i, rel := range relList {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiQuery]")+" ", 0)
+					l.Printf("Processing relation for query in room %s: %s", id, rel)
+				}
+
+				if factList, err := room.clipsInstance.QueryFactsAtomic(rel); err != nil {
+					if e.Debug {
+						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiQuery]")+" ", 0)
+						l.Printf("Error querying status in room %s - %s: %v", id, rel, err)
+					}
+					ci.Unlock()
+					Error(w, http.StatusInternalServerError, "failed to query status")
+					return
+				} else {
+					if e.Debug {
+						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiQuery]")+" ", 0)
+						l.Printf("Status in room %s - %s: %+v", id, rel, factList)
+					}
+					allFacts[i] = factList
+				}
+			}
+			ci.Unlock()
+
+			response := make(map[string][]map[string]string)
+			for i, factList := range allFacts {
+
+				if factMap, err := genericFactToMap(e.Config, relList[i], factList); err != nil {
+					if e.Debug {
+						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiQuery]")+" ", 0)
+						l.Printf("Error converting fact to struct in room %s - %s: %v", id, relList[i], err)
+					}
+					Error(w, http.StatusInternalServerError, "failed to convert fact to struct")
+					return
+				} else {
+					response[relList[i]] = factMap
+				}
+			}
+
+			JSON(w, http.StatusOK, map[string]any{
+				"response": response,
+			})
+		}
 	}
 }

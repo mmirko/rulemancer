@@ -7,14 +7,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// rebuildCmd represents the rebuild command
+// buildCmd represents the build command
 var rebuildCmd = &cobra.Command{
-	Use:   "rebuild",
-	Short: "Rebuild the engine (experimental)",
-	Long:  `Rewrite some parts of the engine's internal state and data structures parsing the rules database. This is an experimental feature and may not work as expected.`,
+	Use:   "build",
+	Short: "Build the engine extra elements (experimental)",
+	Long:  `Write extra elements for games, things like call from curl, JSON interfaces and other stuff.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := e.RebuildEngine(); err != nil {
-			cmd.Println("Failed to rebuild engine:")
+		if err := e.BuildEngineExtras(); err != nil {
+			cmd.Println("Failed to build tools:")
 			cmd.Println(err.Error())
 			return
 		}

@@ -26,8 +26,8 @@ import (
 // testCmd represents the test command
 var testCmd = &cobra.Command{
 	Use:   "test",
-	Short: "test the rules engine",
-	Long:  `A command to open the rules database and run pre-defined tests.`,
+	Short: "Test the rules engine",
+	Long:  `A command to open the rules database and run pre-defined tests. It does not rely on the configuration file, but uses the rulepool and testpool directories as given in the flags.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check if rulePool directory exists
 		if _, err := os.Stat(rulePool); os.IsNotExist(err) {

@@ -23,6 +23,7 @@ func (e *Engine) roomRoutes(r chi.Router) {
 type CreateRoomRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	GameRef     string `json:"game_ref"`
 }
 
 func (e *Engine) apiCreateRoom(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +33,7 @@ func (e *Engine) apiCreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if room, err := e.newRoom(req.Name, req.Description); err != nil {
+	if room, err := e.newRoom(req.Name, req.Description, req.GameRef); err != nil {
 		Error(w, http.StatusInternalServerError, "failed to create room")
 		return
 	} else {
@@ -54,6 +55,7 @@ func (e *Engine) apiGetRoom(w http.ResponseWriter, r *http.Request) {
 			"name":           room.name,
 			"description":    room.description,
 			"clips_instance": room.clipsInstance.Info(),
+			"running_game":   room.game.Info(),
 		})
 	}
 }

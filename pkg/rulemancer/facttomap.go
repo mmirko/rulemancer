@@ -6,6 +6,7 @@ import (
 	"regexp"
 )
 
+// a list of facts of a given statusItem type into a slice of maps
 func genericFactToMap(c *Config, statusItem string, factList string) ([]map[string]string, error) {
 	// Pattern to match (statusItem ... anything until matching closing paren
 	// We need to manually parse to handle nested parentheses

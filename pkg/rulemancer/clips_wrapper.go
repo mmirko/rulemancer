@@ -13,6 +13,7 @@ void clips_run(void*);
 void clips_assert(void*, const char*);
 char* find_facts_as_string(void*, const char*);
 char* find_all_facts_as_string(void*);
+void clips_free_string(void*, char*);
 */
 import "C"
 import (
@@ -49,20 +50,19 @@ func (ci *ClipsInstance) InitClips() error {
 	return nil
 }
 
-// LoadKnowledgeBase loads the knowledge base from the rule pool directory, it is ment to be called once per instance after InitClips
-func (ci *ClipsInstance) LoadKnowledgeBase() error {
-	// Load knowledge base from the pool directory
-	rulePool := ci.e.RulePool
-	if _, err := os.Stat(rulePool); os.IsNotExist(err) {
-		return fmt.Errorf("rule pool directory does not exist: %s", rulePool)
+// loadGame loads the rules from the specified location into a CLIPS instance
+func (ci *ClipsInstance) loadGame(rulesLocation string) error {
+	// Load a game from the specified rules location
+	if _, err := os.Stat(rulesLocation); os.IsNotExist(err) {
+		return fmt.Errorf("rules location does not exist: %s", rulesLocation)
 	}
-	if rulesFiles, err := os.ReadDir(rulePool); err != nil {
-		return fmt.Errorf("failed to read rule pool directory: %w", err)
+	if rulesFiles, err := os.ReadDir(rulesLocation); err != nil {
+		return fmt.Errorf("failed to read rules location: %w", err)
 	} else {
 		// Load each rule file into CLIPS
 		for _, file := range rulesFiles {
 			if !file.IsDir() {
-				cfile := C.CString(rulePool + "/" + file.Name())
+				cfile := C.CString(rulesLocation + "/" + file.Name())
 				defer C.free(unsafe.Pointer(cfile))
 				C.clips_load(ci.cl, cfile)
 			}
@@ -73,7 +73,39 @@ func (ci *ClipsInstance) LoadKnowledgeBase() error {
 	return nil
 }
 
+func (ci *ClipsInstance) getGameConfig(config string) (map[string][]string, error) {
+	facts, err := ci.QueryFacts(config)
+	if err != nil {
+		return nil, err
+	}
+
+	factsMap, err := genericFactToMap(ci.e.Config, config, facts)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string][]string)
+
+	for _, fact := range factsMap {
+		if name, ok := fact["name"]; ok {
+			if relations, ok := fact["relations"]; ok {
+				result[name] = factsSplit(relations)
+			} else {
+				return nil, fmt.Errorf("missing relations slot in %s fact", config)
+			}
+		} else {
+			return nil, fmt.Errorf("missing name slot in %s fact", config)
+		}
+	}
+
+	return result, nil
+}
+
 func (ci *ClipsInstance) spawnSerializer() {
+	if ci.e.Debug {
+		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/ClipsInstance]")+" ", 0)
+		l.Println("Spawning CLIPS serializer goroutine for instance", fmt.Sprintf("%p", ci.cl))
+	}
 	go func() {
 		for {
 			select {
@@ -100,13 +132,23 @@ func (ci *ClipsInstance) Info() map[string]string {
 		"status":        "running",
 		"engine":        "CLIPS",
 		"version":       "6.40",
-		"rule_pool":     ci.e.RulePool,
 		"instance_addr": fmt.Sprintf("%p", ci.cl),
 	}
 	ci.rChan <- struct{}{}
 	return response
 }
 
+// Lock the CLIPS instance for serialized access
+func (ci *ClipsInstance) Lock() {
+	<-ci.sChan
+}
+
+// Unlock the CLIPS instance after serialized access
+func (ci *ClipsInstance) Unlock() {
+	ci.rChan <- struct{}{}
+}
+
+// AssertFact asserts a fact into the CLIPS environment
 func (ci *ClipsInstance) AssertFact(fact string) error {
 	// Assert a fact into the CLIPS environment
 	if ci.cl == nil {
@@ -120,6 +162,19 @@ func (ci *ClipsInstance) AssertFact(fact string) error {
 	return nil
 }
 
+// AssertFactAtomic asserts a fact into the CLIPS environment without using the serializer goroutine
+func (ci *ClipsInstance) AssertFactAtomic(fact string) error {
+	// Assert a fact into the CLIPS environment
+	if ci.cl == nil {
+		return fmt.Errorf("CLIPS instance not initialized")
+	}
+	cFact := C.CString(fact)
+	defer C.free(unsafe.Pointer(cFact))
+	C.clips_assert(ci.cl, cFact)
+	return nil
+}
+
+// Run executes the CLIPS engine
 func (ci *ClipsInstance) Run() error {
 	// Run the CLIPS engine
 	if ci.cl == nil {
@@ -131,6 +186,17 @@ func (ci *ClipsInstance) Run() error {
 	return nil
 }
 
+// RunAtomic executes the CLIPS engine without using the serializer goroutine
+func (ci *ClipsInstance) RunAtomic() error {
+	// Run the CLIPS engine
+	if ci.cl == nil {
+		return fmt.Errorf("CLIPS instance not initialized")
+	}
+	C.clips_run(ci.cl)
+	return nil
+}
+
+// QueryFacts queries facts matching the given relation pattern
 func (ci *ClipsInstance) QueryFacts(relation string) (string, error) {
 	// Query facts matching the pattern
 	if ci.cl == nil {
@@ -140,13 +206,31 @@ func (ci *ClipsInstance) QueryFacts(relation string) (string, error) {
 	cRelation := C.CString(relation)
 	defer C.free(unsafe.Pointer(cRelation))
 	facts := C.find_facts_as_string(ci.cl, cRelation)
-	defer C.free(unsafe.Pointer(facts))
+	defer C.clips_free_string(ci.cl, facts)
 	goFacts := sanitizeFacts(C.GoString(facts))
 	if ci.e.Debug {
 		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/QueryFacts]")+" ", 0)
 		l.Println("Queried facts raw:", goFacts)
 	}
 	ci.rChan <- struct{}{}
+	return goFacts, nil
+}
+
+// QueryFactsAtomic queries facts matching the given relation pattern without using the serializer goroutine
+func (ci *ClipsInstance) QueryFactsAtomic(relation string) (string, error) {
+	// Query facts matching the pattern
+	if ci.cl == nil {
+		return "", fmt.Errorf("CLIPS instance not initialized")
+	}
+	cRelation := C.CString(relation)
+	defer C.free(unsafe.Pointer(cRelation))
+	facts := C.find_facts_as_string(ci.cl, cRelation)
+	defer C.clips_free_string(ci.cl, facts)
+	goFacts := sanitizeFacts(C.GoString(facts))
+	if ci.e.Debug {
+		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/QueryFacts]")+" ", 0)
+		l.Println("Queried facts raw:", goFacts)
+	}
 	return goFacts, nil
 }
 
@@ -157,7 +241,7 @@ func (ci *ClipsInstance) QueryFactsAllFacts() (string, error) {
 	}
 	<-ci.sChan
 	facts := C.find_all_facts_as_string(ci.cl)
-	defer C.free(unsafe.Pointer(facts))
+	defer C.clips_free_string(ci.cl, facts)
 	goFacts := sanitizeFacts(C.GoString(facts))
 	if ci.e.Debug {
 		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/QueryFactsAllFacts]")+" ", 0)

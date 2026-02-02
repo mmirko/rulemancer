@@ -19,25 +19,35 @@ import (
 
 type Engine struct {
 	*Config
-	rooms      map[string]*Room
-	roomsMutex sync.RWMutex
-	router     chi.Router
-	stopChan   chan os.Signal
+	games        map[string]*Game
+	gamesMutex   sync.RWMutex
+	rooms        map[string]*Room
+	roomsMutex   sync.RWMutex
+	clients      map[string]*Client
+	clientsMutex sync.RWMutex
+	router       chi.Router
+	stopChan     chan os.Signal
 }
 
 func NewEngine() *Engine {
 	return &Engine{
-		Config:     NewConfig(),
-		rooms:      make(map[string]*Room),
-		roomsMutex: sync.RWMutex{},
-		router:     chi.NewRouter(),
-		stopChan:   make(chan os.Signal, 1),
+		Config:       NewConfig(),
+		games:        make(map[string]*Game),
+		gamesMutex:   sync.RWMutex{},
+		rooms:        make(map[string]*Room),
+		roomsMutex:   sync.RWMutex{},
+		clients:      make(map[string]*Client),
+		clientsMutex: sync.RWMutex{},
+		router:       chi.NewRouter(),
+		stopChan:     make(chan os.Signal, 1),
 	}
 }
 
 func (e *Engine) SpawnEngine() error {
 	// Implement the logic to spawn and run the CLIPS engine
 	// using the provided configuration and rule pool directory
+
+	e.loadGames()
 
 	r := e.router
 	c := e.Config
@@ -52,6 +62,7 @@ func (e *Engine) SpawnEngine() error {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Route("/system", e.systemRoutes)
 		r.Route("/room", e.roomRoutes)
+		r.Route("/game", e.gameRoutes)
 	})
 
 	srv := &http.Server{

@@ -1,5 +1,5 @@
 //go:generate re2go $INPUT -o $OUTPUT --api simple
-package game
+package rulemancer
 
 import (
 	"fmt"
@@ -12,15 +12,20 @@ const (
 )
 
 type scopeStack struct {
+	*Engine
+	debugLevel int
 	stack []int
 }
 
-func newScopeStack() *scopeStack {
-	return &scopeStack{stack: make([]int, 0)}
+func newScopeStack(g *Engine) *scopeStack {
+	return &scopeStack{Engine: g, stack: make([]int, 0)}
 }
 
 func (s *scopeStack) push(scope int) int {
 	s.stack = append(s.stack, scope)
+	if s.Debug {
+		fmt.Println(purple("scope:"), s)
+	}
 	return scope
 }
 
@@ -28,6 +33,9 @@ func (s *scopeStack) pop() int {
 	if len(s.stack) > 0 {
 		s.stack = s.stack[:len(s.stack)-1]
 		scope := s.stack[len(s.stack)-1]
+		if s.Debug {
+			fmt.Println(purple("scope:"), s)
+		}
 		return scope
 	}
 	return -1
@@ -50,7 +58,7 @@ func (s *scopeStack) descend(scope int) int {
 func (s *scopeStack) String() string {
 	result := "["
 	for i := 0 ; i < len(s.stack); i++ {
-		result += scopeName(s.stack[i])
+		result += cyan(scopeName(s.stack[i]))
 		if i < len(s.stack)-1 {
 			result += ", "
 		}
@@ -78,21 +86,17 @@ func peek(str string, cur int) byte {
 	}
 }
 
-type GameParser struct {
-	*Config
-} 
-
-func (h * GameParser) Lex(relation string, yyinput string) error {
+func (g * Engine) Compile(yyinput string) error {
 	yycursor:= 0
 	yytext:= 0
 	yymarker:= 0
 	prev:= 0
 	scope:= ScopeMain
-	sS := newScopeStack()
+	sS := newScopeStack(g)
 	sS.push(scope)
 
 	for {
-		if h.Debug {
+		if g.Debug && g.DebugLevel >= debugLevelMax {
 			fmt.Println("----")
 			fmt.Println("yycursor:", yycursor, "yytext:", yytext, "yymarker:", yymarker)
 			fmt.Println("scopeStack:", sS.String())
@@ -102,28 +106,18 @@ func (h * GameParser) Lex(relation string, yyinput string) error {
 
 		switch scope {
 		case ScopeMain:
-			if h.Debug {
-				fmt.Println("Scope Main entered")
-			}
 		 	/*!re2c
 			re2c:yyfill:enable = 0;
 			re2c:YYCTYPE = byte;
 			re2c:YYPEEK = "peek(str, cur)";
 			re2c:YYSKIP = "cur += 1";
 
-			comment = ";";
-			capitalname = [A-Z][A-Za-z0-9]*;
-			varname = [A-Za-z0-9][A-Za-z0-9-]*;
-
+			comment = "//";
+			varname = [a-z][A-Za-z0-9]*;
 			w = [ \t]+;
 
 			*      { return errors.New("Unexpected input: "+string(yyinput[prev:yycursor])) }
 			[\x00] { return nil }
-			varname {
-					scope = sS.push(ScopeMain)
-					prev = yycursor
-					continue
-				}
 			comment {
 					scope = sS.push(ScopeComment)
 					prev = yycursor
@@ -141,9 +135,6 @@ func (h * GameParser) Lex(relation string, yyinput string) error {
 				}
 			*/
 		case ScopeComment:
-			if h.Debug {
-				fmt.Println("Scope Comment entered")
-			}
 			/*!re2c
 			re2c:yyfill:enable = 0;
 			re2c:YYCTYPE = byte;
@@ -161,6 +152,7 @@ func (h * GameParser) Lex(relation string, yyinput string) error {
 					continue
 				}
 			*/
+
 		}
 	}
 }
