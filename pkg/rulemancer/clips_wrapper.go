@@ -50,30 +50,6 @@ func (ci *ClipsInstance) InitClips() error {
 	return nil
 }
 
-// LoadKnowledgeBase loads the knowledge base from the rule pool directory, it is meant to be called once per instance after InitClips
-func (ci *ClipsInstance) LoadKnowledgeBase() error {
-	// Load knowledge base from the pool directory
-	rulePool := ci.e.RulePool
-	if _, err := os.Stat(rulePool); os.IsNotExist(err) {
-		return fmt.Errorf("rule pool directory does not exist: %s", rulePool)
-	}
-	if rulesFiles, err := os.ReadDir(rulePool); err != nil {
-		return fmt.Errorf("failed to read rule pool directory: %w", err)
-	} else {
-		// Load each rule file into CLIPS
-		for _, file := range rulesFiles {
-			if !file.IsDir() {
-				cfile := C.CString(rulePool + "/" + file.Name())
-				defer C.free(unsafe.Pointer(cfile))
-				C.clips_load(ci.cl, cfile)
-			}
-		}
-		C.clips_reset(ci.cl)
-		C.clips_run(ci.cl)
-	}
-	return nil
-}
-
 // loadGame loads the rules from the specified location into a CLIPS instance
 func (ci *ClipsInstance) loadGame(rulesLocation string) error {
 	// Load a game from the specified rules location
@@ -126,6 +102,10 @@ func (ci *ClipsInstance) getGameConfig(config string) (map[string][]string, erro
 }
 
 func (ci *ClipsInstance) spawnSerializer() {
+	if ci.e.Debug {
+		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/ClipsInstance]")+" ", 0)
+		l.Println("Spawning CLIPS serializer goroutine for instance", fmt.Sprintf("%p", ci.cl))
+	}
 	go func() {
 		for {
 			select {
@@ -152,7 +132,6 @@ func (ci *ClipsInstance) Info() map[string]string {
 		"status":        "running",
 		"engine":        "CLIPS",
 		"version":       "6.40",
-		"rule_pool":     ci.e.RulePool,
 		"instance_addr": fmt.Sprintf("%p", ci.cl),
 	}
 	ci.rChan <- struct{}{}

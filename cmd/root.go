@@ -34,8 +34,8 @@ var rootCmd = &cobra.Command{
 }
 
 var cfgFile string     // config file
-var rulePool string    // Knowledge base pool, used to store the knowledge base in form of a Prolog files
-var testPool string    // Test pool, used to store test files
+var rulePool string    // Knowledge base pool, used only to test rules, the games rules locations are defined in the config file
+var testPool string    // Test pool, used to store test files for rulePool
 var TLSCertFile string // TLS Certificate file
 var TLSKeyFile string  // TLS Key file
 
@@ -56,10 +56,10 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "rulemancer.json", "config file (default rulemancer.json)")
-	rootCmd.PersistentFlags().StringVarP(&rulePool, "rulepool", "k", "rulepool", "Knowledge base pool directory (default rulepool)")
-	rootCmd.PersistentFlags().StringVarP(&testPool, "testpool", "t", "testpool", "Test pool directory (default testpool)")
-	rootCmd.PersistentFlags().StringVarP(&TLSCertFile, "tlscert", "", "server.crt", "TLS Certificate file (default server.crt)")
-	rootCmd.PersistentFlags().StringVarP(&TLSKeyFile, "tlskey", "", "server.key", "TLS Key file (default server.key)")
+	rootCmd.PersistentFlags().StringVarP(&rulePool, "rulepool", "k", "rulepool", "Knowledge base pool directory for testing mode")
+	rootCmd.PersistentFlags().StringVarP(&testPool, "testpool", "t", "testpool", "Test pool directory for testing mode")
+	rootCmd.PersistentFlags().StringVarP(&TLSCertFile, "tlscert", "", "", "TLS Certificate file (default server.crt)")
+	rootCmd.PersistentFlags().StringVarP(&TLSKeyFile, "tlskey", "", "", "TLS Key file (default server.key)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -73,15 +73,19 @@ func init() {
 		}
 	}
 
-	// Override rule pool if specified
-	if rulePool != "" {
-		e.RulePool = rulePool
-	}
 	// Override TLS cert and key if specified
 	if TLSCertFile != "" {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[cmd/root]")+" ", 0)
+			l.Printf("Overriding TLS cert file to %s", TLSCertFile)
+		}
 		e.TLSCertFile = TLSCertFile
 	}
 	if TLSKeyFile != "" {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[cmd/root]")+" ", 0)
+			l.Printf("Overriding TLS key file to %s", TLSKeyFile)
+		}
 		e.TLSKeyFile = TLSKeyFile
 	}
 }
