@@ -62,6 +62,7 @@ func (e *Engine) SpawnEngine() error {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Route("/system", e.systemRoutes)
 		r.Route("/room", e.roomRoutes)
+		r.Route("/client", e.clientRoutes)
 		r.Route("/game", e.gameRoutes)
 	})
 
