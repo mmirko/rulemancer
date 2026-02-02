@@ -13,7 +13,7 @@ var rebuildCmd = &cobra.Command{
 	Short: "Build the engine extra elements (experimental)",
 	Long:  `Write extra elements for games, things like call from curl, JSON interfaces and other stuff.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := e.RebuildEngine(); err != nil {
+		if err := e.BuildEngineExtras(); err != nil {
 			cmd.Println("Failed to build tools:")
 			cmd.Println(err.Error())
 			return

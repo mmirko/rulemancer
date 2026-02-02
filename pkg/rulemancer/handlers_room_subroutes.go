@@ -97,6 +97,7 @@ func (e *Engine) apiAssert(w http.ResponseWriter, r *http.Request) {
 						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiAssert]")+" ", 0)
 						l.Printf("Error asserting fact in room %s - %s: %v", id, fact, err)
 					}
+					ci.Unlock()
 					Error(w, http.StatusInternalServerError, "failed to assert")
 					return
 				}
@@ -107,6 +108,7 @@ func (e *Engine) apiAssert(w http.ResponseWriter, r *http.Request) {
 					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiAssert]")+" ", 0)
 					l.Printf("Error running CLIPS in room %s: %v", id, err)
 				}
+				ci.Unlock()
 				Error(w, http.StatusInternalServerError, "failed to run")
 				return
 			} else {
@@ -144,6 +146,7 @@ func (e *Engine) apiAssert(w http.ResponseWriter, r *http.Request) {
 							l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiAssert]")+" ", 0)
 							l.Printf("Error querying status in room %s - %s: %v", id, rel, err)
 						}
+						ci.Unlock()
 						Error(w, http.StatusInternalServerError, "failed to query status")
 						return
 					} else {
@@ -162,6 +165,7 @@ func (e *Engine) apiAssert(w http.ResponseWriter, r *http.Request) {
 							l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiAssert]")+" ", 0)
 							l.Printf("Error converting fact to struct in room %s - %s: %v", id, relList[i], err)
 						}
+						ci.Unlock()
 						Error(w, http.StatusInternalServerError, "failed to convert fact to struct")
 						return
 					} else {

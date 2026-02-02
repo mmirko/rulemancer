@@ -55,6 +55,7 @@ func (e *Engine) apiGetRoom(w http.ResponseWriter, r *http.Request) {
 			"name":           room.name,
 			"description":    room.description,
 			"clips_instance": room.clipsInstance.Info(),
+			"running_game":   room.game.Info(),
 		})
 	}
 }

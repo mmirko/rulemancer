@@ -16,6 +16,18 @@ type Game struct {
 	queryable     map[string][]string
 }
 
+func (g *Game) Info() map[string]any {
+	return map[string]any{
+		"id":            g.id,
+		"name":          g.name,
+		"description":   g.description,
+		"rulesLocation": g.rulesLocation,
+		"assertable":    g.assertable,
+		"responses":     g.responses,
+		"queryable":     g.queryable,
+	}
+}
+
 func (e *Engine) loadGames() {
 	// Load games from the configured games list
 	for _, gameLocation := range e.Games {

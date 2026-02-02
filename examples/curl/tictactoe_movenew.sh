@@ -9,7 +9,7 @@ payload=$(cat <<EOF
 { "move" : [{
   "x": ["3"],
   "y": ["2"],
-  "player": ["o"]
+  "player": ["x"]
 }]
 }
 EOF

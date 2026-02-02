@@ -1,8 +1,5 @@
 SHELL := /bin/bash
 .PHONY: all
 all:
-	@re2c --lang go -o game/lex.go game/lex.go.re -i --api simple
-
-.PHONY: clean
-clean:
-	@rm -f game/lex.go
+	@rm -f rulemancer/lex.go
+	@re2c --lang go -o rulemancer/lex.go rulemancer/lex.go.re -i --api simple

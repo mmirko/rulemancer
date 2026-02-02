@@ -57,6 +57,7 @@ func (e *Engine) apiQuery(w http.ResponseWriter, r *http.Request) {
 						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiQuery]")+" ", 0)
 						l.Printf("Error querying status in room %s - %s: %v", id, rel, err)
 					}
+					ci.Unlock()
 					Error(w, http.StatusInternalServerError, "failed to query status")
 					return
 				} else {
