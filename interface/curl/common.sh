@@ -12,7 +12,7 @@ curl_json() {
   local url="${API_HOST}${API_BASE}${path}"
 
   echo "$method $url" >&2
-
+  
   if [[ -n "$data" ]]; then
     curl -k -sS -X "$method" "$url" \
       "${API_HEADERS[@]}" \

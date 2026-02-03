@@ -10,4 +10,4 @@ payload=$(cat <<EOF
 EOF
 )
 
-curl_json POST "/system/quit" "$payload" | jq .
+curl_json POST "/system/quit" "$payload" 

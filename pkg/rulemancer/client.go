@@ -6,7 +6,6 @@ type Client struct {
 	name        string
 	description string
 	id          string
-	token       string
 	rooms       []*Room
 }
 
@@ -17,7 +16,6 @@ func (e *Engine) newClient(name, description string) *Client {
 		name:        name,
 		description: description,
 		id:          e.generateClientUniqueID(),
-		token:       e.generateClientToken(),
 		rooms:       make([]*Room, 0),
 	}
 
@@ -32,10 +30,6 @@ func (e *Engine) generateClientUniqueID() string {
 			return newId
 		}
 	}
-}
-
-func (e *Engine) generateClientToken() string {
-	return RandStringBytes(32)
 }
 
 func (e *Engine) searchClient(id string) (*Client, error) {

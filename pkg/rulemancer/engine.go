@@ -5,6 +5,7 @@ package rulemancer
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,10 +16,12 @@ import (
 
 	chi "github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	jwtauth "github.com/go-chi/jwtauth/v5"
 )
 
 type Engine struct {
 	*Config
+	*jwtauth.JWTAuth
 	games        map[string]*Game
 	gamesMutex   sync.RWMutex
 	rooms        map[string]*Room
@@ -29,9 +32,10 @@ type Engine struct {
 	stopChan     chan os.Signal
 }
 
-func NewEngine() *Engine {
+func NewEngine(secret string) *Engine {
 	return &Engine{
 		Config:       NewConfig(),
+		JWTAuth:      jwtauth.New("HS256", []byte(secret), nil),
 		games:        make(map[string]*Game),
 		gamesMutex:   sync.RWMutex{},
 		rooms:        make(map[string]*Room),
@@ -48,6 +52,9 @@ func (e *Engine) SpawnEngine() error {
 	// using the provided configuration and rule pool directory
 
 	e.loadGames()
+
+	_, tokenString, _ := e.Encode(map[string]interface{}{"id": "admin"})
+	fmt.Printf("admin jwt: %s\n", tokenString)
 
 	r := e.router
 	c := e.Config

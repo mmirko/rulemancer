@@ -32,15 +32,17 @@ func (e *Engine) apiCreateClient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := e.newClient(req.Name, req.Description)
+
+	_, tokenString, _ := e.Encode(map[string]interface{}{"id": client.id})
+
 	JSON(w, http.StatusCreated, map[string]string{
-		"id":    client.id,
-		"token": client.token,
+		"id":        client.id,
+		"api_token": tokenString,
 	})
 }
 
 func (e *Engine) apiGetClient(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-
 	if client, err := e.searchClient(id); err != nil {
 		Error(w, http.StatusNotFound, "client not found")
 		return

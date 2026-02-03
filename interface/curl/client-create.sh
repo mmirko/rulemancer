@@ -11,4 +11,7 @@ payload=$(cat <<EOF
 EOF
 )
 
-curl_json POST "/client/create" "$payload" | jq .
+curl_json POST "/client/create" "$payload" > /tmp/rulemancer 2> /dev/null
+
+echo export API_TOKEN=`cat /tmp/rulemancer | jq ".api_token"`
+rm -f /tmpo/rulemancer

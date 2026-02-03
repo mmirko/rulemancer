@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"log"
 	"os"
 
 	"github.com/mmirko/rulemancer/pkg/rulemancer"
@@ -38,6 +37,7 @@ var rulePool string    // Knowledge base pool, used only to test rules, the game
 var testPool string    // Test pool, used to store test files for rulePool
 var TLSCertFile string // TLS Certificate file
 var TLSKeyFile string  // TLS Key file
+var secret string      // JWT secret
 
 var e *rulemancer.Engine // Engine object
 
@@ -60,32 +60,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&testPool, "testpool", "t", "testpool", "Test pool directory for testing mode")
 	rootCmd.PersistentFlags().StringVarP(&TLSCertFile, "tlscert", "", "", "TLS Certificate file (default server.crt)")
 	rootCmd.PersistentFlags().StringVarP(&TLSKeyFile, "tlskey", "", "", "TLS Key file (default server.key)")
+	rootCmd.PersistentFlags().StringVarP(&secret, "secret", "s", "", "JWT Secret for token signing")
 
 	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
+	// when this action is called directly
 
-	e = rulemancer.NewEngine()
-
-	if cfgFile != "" {
-		err := e.LoadConfig(cfgFile)
-		if err != nil {
-			log.Fatalf("Error loading config file: %v", err)
-		}
-	}
-
-	// Override TLS cert and key if specified
-	if TLSCertFile != "" {
-		if e.Debug {
-			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[cmd/root]")+" ", 0)
-			l.Printf("Overriding TLS cert file to %s", TLSCertFile)
-		}
-		e.TLSCertFile = TLSCertFile
-	}
-	if TLSKeyFile != "" {
-		if e.Debug {
-			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[cmd/root]")+" ", 0)
-			l.Printf("Overriding TLS key file to %s", TLSKeyFile)
-		}
-		e.TLSKeyFile = TLSKeyFile
-	}
 }
