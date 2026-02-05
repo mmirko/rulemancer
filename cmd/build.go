@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var shellOutDir string
+var interfaceDir string
 
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
@@ -29,7 +29,7 @@ var buildCmd = &cobra.Command{
 			}
 		}
 
-		if err := e.BuildEngineExtras(shellOutDir); err != nil {
+		if err := e.BuildEngineExtras(interfaceDir); err != nil {
 			log.Fatalf("Error building engine extras: %v", err)
 		}
 	},
@@ -37,5 +37,5 @@ var buildCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(buildCmd)
-	buildCmd.Flags().StringVarP(&shellOutDir, "shell-outdir", "o", "outdir", "Output directory for engine shell extras")
+	buildCmd.Flags().StringVarP(&interfaceDir, "interface", "i", "interface", "Output directory for engine extras")
 }

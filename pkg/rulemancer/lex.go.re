@@ -15,39 +15,6 @@ const (
 	ScopeMultiSlot
 )
 
-type ProtocolData struct {
-	*Engine
-	relations  []string
-	slots      map[string][]string
-	multislots map[string][]string
-}
-
-func (e *Engine) newProtocolData() *ProtocolData {
-	slots := make(map[string][]string)
-	multislots := make(map[string][]string)
-	for _, game := range e.games {
-		for _, relations := range game.assertable {
-			for _, rel := range relations {
-				slots[rel] = make([]string, 0)
-				multislots[rel] = make([]string, 0)
-			}
-		}
-		for _, relations := range game.responses {
-			for _, rel := range relations {
-				slots[rel] = make([]string, 0)
-				multislots[rel] = make([]string, 0)
-			}
-		}
-		for _, relations := range game.queryable {
-			for _, rel := range relations {
-				slots[rel] = make([]string, 0)
-				multislots[rel] = make([]string, 0)
-			}
-		}
-	}
-	return &ProtocolData{Engine: e, slots: slots, multislots: multislots}
-}
-
 type scopeData struct {
 	blockDepth int
 	name       string

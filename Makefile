@@ -9,3 +9,4 @@ rulemancer:
 .PHONY: clean
 clean:
 	@rm -f ./rulemancer
+	@rm -rf ./interface

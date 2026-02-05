@@ -1,15 +1,136 @@
 package rulemancer
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"math"
 	"os"
+	"text/template"
 )
 
-type relevantFact struct {
-	relation   string
-	slots      []string
-	multislots []string
+type ProtocolData struct {
+	*Engine
+	relations  []string
+	slots      map[string][]string
+	multislots map[string][]string
+	funcMap    template.FuncMap
+}
+
+func (e *Engine) newProtocolData(withFuncMap bool) *ProtocolData {
+	slots := make(map[string][]string)
+	multislots := make(map[string][]string)
+	for _, game := range e.games {
+		for _, relations := range game.assertable {
+			for _, rel := range relations {
+				slots[rel] = make([]string, 0)
+				multislots[rel] = make([]string, 0)
+			}
+		}
+		for _, relations := range game.responses {
+			for _, rel := range relations {
+				slots[rel] = make([]string, 0)
+				multislots[rel] = make([]string, 0)
+			}
+		}
+		for _, relations := range game.queryable {
+			for _, rel := range relations {
+				slots[rel] = make([]string, 0)
+				multislots[rel] = make([]string, 0)
+			}
+		}
+	}
+	if !withFuncMap {
+		return &ProtocolData{Engine: e, slots: slots, multislots: multislots, funcMap: nil}
+	}
+
+	funcMap := template.FuncMap{
+		"inc": func(i int) int {
+			return i + 1
+		},
+		"dec": func(i int) int {
+			return i - 1
+		},
+		"n": func(start, end int) []int {
+			var result []int
+			for i := start; i < end; i++ {
+				result = append(result, i)
+			}
+			return result
+		},
+		"ns": func(start, end, step int) []int {
+			var result []int
+			for i := start; i < end; i += step {
+				result = append(result, i)
+			}
+			return result
+		},
+		"sum": func(a, b int) int {
+			return a + b
+		},
+		"div": func(a, b int) int {
+			return a / b
+		},
+		"mult": func(a, b int) int {
+			return a * b
+		},
+		"pow": func(a, b int) int {
+			return int(math.Pow(float64(a), float64(b)))
+		},
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+	}
+	return &ProtocolData{Engine: e, slots: slots, multislots: multislots, funcMap: funcMap}
+}
+
+// Merge merges another ProtocolData into this one.
+func (pd *ProtocolData) Merge(other *ProtocolData) {
+	for rel, slots := range other.slots {
+		if _, exists := pd.slots[rel]; !exists {
+			pd.slots[rel] = slots
+		} else {
+			existingSlots := pd.slots[rel]
+			slotSet := make(map[string]struct{})
+			for _, slot := range existingSlots {
+				slotSet[slot] = struct{}{}
+			}
+			for _, slot := range slots {
+				if _, found := slotSet[slot]; !found {
+					existingSlots = append(existingSlots, slot)
+				}
+			}
+			pd.slots[rel] = existingSlots
+		}
+	}
+	for rel, multislots := range other.multislots {
+		if _, exists := pd.multislots[rel]; !exists {
+			pd.multislots[rel] = multislots
+		} else {
+			existingMultislots := pd.multislots[rel]
+			multislotSet := make(map[string]struct{})
+			for _, multislot := range existingMultislots {
+				multislotSet[multislot] = struct{}{}
+			}
+			for _, multislot := range multislots {
+				if _, found := multislotSet[multislot]; !found {
+					existingMultislots = append(existingMultislots, multislot)
+				}
+			}
+			pd.multislots[rel] = existingMultislots
+		}
+	}
 }
 
 func (e *Engine) BuildEngineExtras(shellOutdir string) error {
@@ -73,7 +194,15 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 		}
 	}
 
+	// Load each game relations information about slots and multislots
+	gamesInterfaces := make(map[string]*ProtocolData)
+
 	for _, game := range e.games {
+
+		// Create a new ProtocolData for the game, it will hold the slots and multislots information from
+		// the rules files. It also has the funcMap for template execution.
+		rf := e.newProtocolData(true)
+
 		gameName := game.name
 		rulesLocation := game.rulesLocation
 		if e.Debug {
@@ -104,7 +233,13 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 						return fmt.Errorf("failed to read rule file %s: %w", file.Name(), err)
 					}
 
-					pd := e.newProtocolData()
+					if e.Debug {
+						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineExtras]")+" ", 0)
+						l.Printf("Executing parser on rule file: %s", file.Name())
+					}
+
+					pd := e.newProtocolData(false)
+
 					if err := pd.Compile(string(fileContent) + "\x00"); err != nil {
 						if e.Debug {
 							l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
@@ -112,12 +247,76 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 						}
 						return fmt.Errorf("failed to compile rule file %s: %w", file.Name(), err)
 					}
+					rf.Merge(pd)
 
+					if e.Debug {
+						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineExtras]")+" ", 0)
+						l.Printf("Successfully processed rule file: %s", file.Name())
+					}
 				}
+			}
+		}
+		gamesInterfaces[gameName] = rf
+	}
+
+	// Now, we have all the games interfaces loaded with their slots and multislots. We also have the templates loaded.
+	// Execute the templates for each game with the corresponding ProtocolData.
+
+	for gameName, pd := range gamesInterfaces {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineExtras]")+" ", 0)
+			l.Printf("Generating shell files for game: %s", gameName)
+		}
+
+		// Create the game directory inside the output directory if it doesn't exist
+		gameOutdir := fmt.Sprintf("%s/%s", shellOutdir, gameName)
+		if _, err := os.Stat(gameOutdir); os.IsNotExist(err) {
+			if e.Debug {
+				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineExtras]")+" ", 0)
+				l.Printf("Game output directory does not exist, creating: %s", gameOutdir)
+			}
+			if err := os.MkdirAll(gameOutdir, 0755); err != nil {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
+					l.Printf("Error creating game output directory %s: %v", gameOutdir, err)
+				}
+				return fmt.Errorf("failed to create game output directory %s: %w", gameOutdir, err)
+			}
+		}
+
+		// Execute each template
+		for templateName, templateContent := range templateMap {
+			tmpl, err := template.New(templateName).Funcs(pd.funcMap).Parse(templateContent)
+			if err != nil {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
+					l.Printf("Error parsing template %s for game %s: %v", templateName, gameName, err)
+				}
+				return fmt.Errorf("failed to parse template %s for game %s: %w", templateName, gameName, err)
+			}
+			outputFilePath := fmt.Sprintf("%s/%s/%s", shellOutdir, gameName, templateName)
+			outputFile, err := os.Create(outputFilePath)
+			if err != nil {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
+					l.Printf("Error creating output file %s: %v", outputFilePath, err)
+				}
+				return fmt.Errorf("failed to create output file %s: %w", outputFilePath, err)
+			}
+			defer outputFile.Close()
+			if err := tmpl.Execute(outputFile, pd); err != nil {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
+					l.Printf("Error executing template %s for game %s: %v", templateName, gameName, err)
+				}
+				return fmt.Errorf("failed to execute template %s for game %s: %w", templateName, gameName, err)
+			}
+			if e.Debug {
+				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineExtras]")+" ", 0)
+				l.Printf("Generated shell file: %s", outputFilePath)
 			}
 		}
 	}
 
-	// TODO
 	return nil
 }
