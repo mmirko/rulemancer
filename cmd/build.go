@@ -4,33 +4,38 @@ Copyright © 2025 Mirko Mariotti mirko@mirkomariotti.it
 package cmd
 
 import (
+	"log"
+
+	"github.com/mmirko/rulemancer/pkg/rulemancer"
 	"github.com/spf13/cobra"
 )
 
+var shellOutDir string
+
 // buildCmd represents the build command
-var rebuildCmd = &cobra.Command{
+var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build the engine extra elements (experimental)",
 	Long:  `Write extra elements for games, things like call from curl, JSON interfaces and other stuff.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := e.BuildEngineExtras(); err != nil {
-			cmd.Println("Failed to build tools:")
-			cmd.Println(err.Error())
-			return
+
+		// Initialize the engine with the secret
+		e = rulemancer.NewEngine("")
+
+		if cfgFile != "" {
+			err := e.LoadConfig(cfgFile)
+			if err != nil {
+				log.Fatalf("Error loading config file: %v", err)
+			}
+		}
+
+		if err := e.BuildEngineExtras(shellOutDir); err != nil {
+			log.Fatalf("Error building engine extras: %v", err)
 		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(rebuildCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// serveCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.AddCommand(buildCmd)
+	buildCmd.Flags().StringVarP(&shellOutDir, "shell-outdir", "o", "outdir", "Output directory for engine shell extras")
 }

@@ -41,8 +41,6 @@ var secret string      // JWT secret
 
 var e *rulemancer.Engine // Engine object
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -51,18 +49,10 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "rulemancer.json", "config file (default rulemancer.json)")
 	rootCmd.PersistentFlags().StringVarP(&rulePool, "rulepool", "k", "rulepool", "Knowledge base pool directory for testing mode")
 	rootCmd.PersistentFlags().StringVarP(&testPool, "testpool", "t", "testpool", "Test pool directory for testing mode")
 	rootCmd.PersistentFlags().StringVarP(&TLSCertFile, "tlscert", "", "", "TLS Certificate file (default server.crt)")
 	rootCmd.PersistentFlags().StringVarP(&TLSKeyFile, "tlskey", "", "", "TLS Key file (default server.key)")
 	rootCmd.PersistentFlags().StringVarP(&secret, "secret", "s", "", "JWT Secret for token signing")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly
-
 }

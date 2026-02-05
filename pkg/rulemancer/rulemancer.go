@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	debugLevelMax = 10
+	debugLevelMax = 20
 )
 
 type Config struct {
