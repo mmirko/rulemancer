@@ -8,13 +8,14 @@ Rulemancer uses CLIPS (C Language Integrated Production System) to define game l
 
 1. **Game Configuration** - Basic metadata about your game
 2. **Game Interface** - How the game interacts with external systems through assertables, results, and queryables
+3. **Game Logic** - The actual rules and templates that define the game's behavior (not covered in this guide)
 
 ## Required Schema
 
 Your game file must respect the schema defined in `rulepool/common.clp`. This schema defines three core templates:
 
 ### 1. `game-config`
-Provides basic metadata about your game.
+Provides basic metadata about your game. In particular, it includes the game's name and description.
 
 **Structure:**
 ```clips
@@ -25,6 +26,7 @@ Provides basic metadata about your game.
 
 ### 2. `assertable`
 Defines facts that can be asserted into the CLIPS environment from external sources (e.g., player moves, game actions).
+The main purpose of the engine is to serve these assertables as REST endpoints.
 
 **Structure:**
 ```clips
@@ -34,7 +36,8 @@ Defines facts that can be asserted into the CLIPS environment from external sour
 ```
 
 ### 3. `results`
-Defines facts that are generated as results of game logic and should be returned to external systems.
+Defines facts that are generated as results of game logic and should be returned to external systems. 
+These are the outputs of the REST endpoints.
 
 **Structure:**
 ```clips
@@ -45,6 +48,7 @@ Defines facts that are generated as results of game logic and should be returned
 
 ### 4. `queryable`
 Defines facts that can be queried from the CLIPS environment (e.g., game state, winner information).
+The engine exposes these queryables as REST endpoints for retrieving game state information, independent of the main game interaction.
 
 **Structure:**
 ```clips
@@ -71,7 +75,8 @@ Use `deffacts` to declare your game configuration:
 ```
 
 **Fields:**
-- `game-name`: Identifier for your game (no spaces, use CamelCase)
+
+- `game-name`: Identifier for your game (no spaces, use lowercase)
 - `description`: Human-readable description of the game
 
 ### Step 3: Define Game Interface
@@ -105,13 +110,14 @@ Assertables define **inputs** to your game - actions or information that can be 
 - `relations`: The relation name(s) used in the actual CLIPS facts
 
 **Example:**
+
 ```clips
 (assertable
   (name move)
   (relations move))
 ```
 
-This means external systems can assert facts like `(move player row col)` into CLIPS.
+This means external systems can assert facts like `(move ...)` into CLIPS.
 
 #### Results
 
@@ -121,13 +127,14 @@ Results define **outputs** from your game logic - facts that should be returned 
 - `relations`: The relation name(s) that will be matched in results
 
 **Example:**
+
 ```clips
 (results 
   (name move)
   (relations last-move))
 ```
 
-This means the system will look for facts like `(last-move player row col)` to return as results.
+This means the system will look for facts like `(last-move ...)` to return as results.
 
 #### Queryables
 
@@ -137,13 +144,30 @@ Queryables define what information can be **queried** from the current game stat
 - `relations`: The relation name(s) that can be queried
 
 **Example:**
+
 ```clips
 (queryable
   (name winner)
   (relations winner cell))
 ```
 
-This means external systems can query for facts matching `(winner player)` or `(cell row col value)`.
+This means external systems can query for facts matching `(winner ...)` or `(cell ...)`.
+
+## Step 4: Implement Game Logic
+
+After creating your metadata file, the interface is defined. The next steps involve implementing the actual game logic:
+
+1. **Create Game Logic Files**: Write CLIPS rules that implement your game logic, not necessarily all the game logic needs to be exposed via the interface. Actually, it is the opposite. Most of the game logic should be internal and only a few relevant facts should be exposed via the interface.
+2. **Define Game Templates**: Create templates for your game-specific exportable facts, results, and queryables
+3. **Configure Rulemancer**: Ensure your game file is included in the Rulemancer configuration so it gets loaded properly.
+4. **Test**: Optionally, create test files to validate your game logic and interface and test them using the `rulemancer test` command.
+
+The game is ready to be served via Rulemancer!
+
+## Step 5 (Optional): Shell interface
+
+You can also create a shell interface to interact with your game via command line (using `curl` commands). The `rulemancer build` command can help you set this up by generating the necessary shell scripts based on your game metadata. By default, the shell interface will be created in the `interfaces/shell/` directory.
+The `rulemancer build` command will parse your game CLIPS file to get the assertables, results, and queryables templates and generate the corresponding shell scripts to interact with your game.
 
 ## Complete Example: Tic-Tac-Toe
 
@@ -152,7 +176,7 @@ Here's the complete metadata file for Tic-Tac-Toe (`rulepool/tictactoemeta.clp`)
 ```clips
 (deffacts tictactoe-config
   (game-config
-    (game-name TicTacToe)
+    (game-name tictactoe)
     (description "A simple Tic Tac Toe game between two players.")))
 
 (deffacts tictactoe-interface
@@ -172,33 +196,43 @@ Here's the complete metadata file for Tic-Tac-Toe (`rulepool/tictactoemeta.clp`)
 
 ### What This Means:
 
-1. **Game Config**: Identifies the game as "TicTacToe"
+1. **Game Config**: Identifies the game as "tictactoe"
 
 2. **Assertable `move`**: External systems can assert move facts like:
+
+Looking at the `move` template, external systems can assert facts like:
+
    ```clips
-   (move X 1 1)  ; Player X moves to position (1,1)
+  (move (x 1) (y 1) (player x))  ; Player x places x at (1,1)
    ```
 
 3. **Results `move`**: After processing, the system returns facts like:
+
    ```clips
-   (last-move X 1 1)  ; The last move was X at (1,1)
+   (last-move (valid no) (reason "Cell already occupied"))  ; Invalid move result
+   (last-move (valid yes) (reason "Move accepted"))  ; Valid move result
    ```
 
 4. **Queryable `winner`**: Can query for winner status:
+
    ```clips
-   (winner X)  ; X has won
+   (winner (player x))  ; Player x has won
    ```
 
 5. **Queryable `cell`**: Can query the board state:
+
    ```clips
-   (cell 1 1 X)  ; Cell at (1,1) contains X
-   (cell 1 2 O)  ; Cell at (1,2) contains O
+   (cell (x 1) (y 1) (value x))  ; Cell (1,1) is occupied by x
+   (cell (x 2) (y 2) (value o))  ; Cell (2,2) is occupied by o
+   ...  ; Other cells
    ```
+
+
 
 ## Best Practices
 
 1. **Naming Conventions**:
-   - Use descriptive names for `game-name` (CamelCase, no spaces)
+   - Use descriptive names for `game-name` (lowercase, no spaces)
    - Keep relation names short but meaningful
    - Be consistent with naming across your game files
 
@@ -214,15 +248,6 @@ Here's the complete metadata file for Tic-Tac-Toe (`rulepool/tictactoemeta.clp`)
    - Test that assertables work by asserting facts and checking the results
    - Test that queryables return expected game state
    - Verify results are properly generated
-
-## Next Steps
-
-After creating your metadata file:
-
-1. **Create Game Logic Files**: Write CLIPS rules that implement your game logic
-2. **Define Game Templates**: Create templates for your game-specific facts
-3. **Implement Rules**: Write rules that respond to assertions and update game state
-4. **Test**: Use the Rulemancer test framework to verify your game works correctly
 
 ## Additional Resources
 

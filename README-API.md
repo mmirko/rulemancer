@@ -1,5 +1,5 @@
 
-# Rulemancer API Endpoints
+# Rulemancer API Endpoints (outdated)
 
 The server exposes the following API routes under `/api/v1`:
 
