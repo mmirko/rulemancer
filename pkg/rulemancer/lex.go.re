@@ -29,7 +29,7 @@ type scopeLevel struct {
 }
 
 func newScopeLevel(e *ProtocolData, scope int) (*scopeLevel, int) {
-	return &scopeLevel{ProtocolData: e, scopeData: &scopeData{}, scopeId: scope, prev: nil, next: nil}, scope
+	return &scopeLevel{ProtocolData: e, scopeData: new(scopeData), scopeId: scope, prev: nil, next: nil}, scope
 }
 
 func (s *scopeLevel) push(scope int) (*scopeLevel, int) {
@@ -224,7 +224,7 @@ func (e *ProtocolData) Compile(yyinput string) error {
 				}
 			blockstart {
 					sS, scope = sS.push(ScopeBlock)
-					sS.blockDepth += 1
+					sS.blockDepth = sS.prev.blockDepth + 1
 					prev = yycursor
 					continue
 				}
@@ -268,7 +268,7 @@ func (e *ProtocolData) Compile(yyinput string) error {
 				}
 			blockstart {
 					sS, scope = sS.push(ScopeBlock)
-					sS.blockDepth = 1
+					sS.blockDepth = sS.prev.blockDepth + 1
 					prev = yycursor
 					continue
 				}
@@ -306,7 +306,7 @@ func (e *ProtocolData) Compile(yyinput string) error {
 				}
 			blockstart {
 					sS, scope = sS.push(ScopeBlock)
-					sS.blockDepth = 1
+					sS.blockDepth = sS.prev.blockDepth + 1
 					prev = yycursor
 					continue
 				}
@@ -335,7 +335,7 @@ func (e *ProtocolData) Compile(yyinput string) error {
 				}
 			blockstart {
 					sS, scope = sS.push(ScopeBlock)
-					sS.blockDepth = 1
+					sS.blockDepth = sS.prev.blockDepth + 1
 					prev = yycursor
 					continue
 				}

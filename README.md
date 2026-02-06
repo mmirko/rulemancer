@@ -59,16 +59,25 @@ The above commands will compile CLIPS and build the Rulemancer binary placed in 
 ### Basic Usage
 
 - `./rulemancer test` - Run test suite
-- `./rulemancer build` - Build the extras tools
+- `./rulemancer build` - Build the extra tools (generates client shell scripts)
 - `./rulemancer serve` - Start HTTPS server (listens on :3000 with TLS)
 
-Once the server is running, the API can be accessed by clients at `https://localhost:3000/api/v1/`
+Once the server is running, it will print an admin JWT token to stdout. The API can be accessed at `https://localhost:3000/api/v1/`
 
 To ease the interaction, the `rulemancer build` command generates shell client interfaces in the `interface/` folder for all available games.
 
 The [Rooms and Games](README-ROOMS-AND-GAMES.md) document provides detailed information on how to create and manage game rooms and interact with games via the API. The API endpoints are documented in the [API Endpoints](README-API.md) document.
 
 The `rulemancer.json` configuration file can be edited to customize server settings.
+
+## Client Management
+
+Rulemancer uses JWT-based authentication for API access:
+
+- **Admin Token**: Printed to stdout at server startup, required for system operations (health checks, shutdown)
+- **Client Tokens**: Create clients via the API to get individual JWT tokens for room operations
+
+Clients can be created, listed, and deleted through the `/api/v1/client` endpoints. Each client receives a unique JWT token for authenticated API access.
 
 ## Configuration
 
