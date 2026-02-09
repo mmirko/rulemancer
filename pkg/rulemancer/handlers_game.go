@@ -49,6 +49,11 @@ func (e *Engine) apiGetGame(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Engine) apiListGames(w http.ResponseWriter, r *http.Request) {
+	if e.Debug {
+		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, green("[rulemancer/apiListGames]")+" ", 0)
+		l.Printf("Listing all games")
+	}
+
 	gamesList := e.listGames()
 
 	JSON(w, http.StatusOK, map[string]any{
