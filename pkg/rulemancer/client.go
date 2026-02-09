@@ -38,7 +38,7 @@ func (e *Engine) newClient(name, description string) *Client {
 
 func (e *Engine) generateClientUniqueID() string {
 	for {
-		newId := RandStringBytes(16)
+		newId := randStringBytes(16)
 		if _, exists := e.clients[newId]; !exists {
 			return newId
 		}

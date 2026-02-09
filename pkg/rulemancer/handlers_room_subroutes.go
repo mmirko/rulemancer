@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
+	jwtauth "github.com/go-chi/jwtauth/v5"
 )
 
 func (e *Engine) roomSubRoutes(r chi.Router) {
@@ -30,6 +31,10 @@ func (e *Engine) apiAssert(w http.ResponseWriter, r *http.Request) {
 	assertion := chi.URLParam(r, "assertion")
 
 	if room, err := e.searchRoom(id); err != nil {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiAssert]")+" ", 0)
+			l.Printf("Room not found: %s", id)
+		}
 		Error(w, http.StatusNotFound, "room not found")
 		return
 	} else {
@@ -187,14 +192,44 @@ func (e *Engine) apiAssert(w http.ResponseWriter, r *http.Request) {
 func (e *Engine) apiGetFacts(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
+	_, claims, err := jwtauth.FromContext(r.Context())
+
+	if err != nil {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetFacts]")+" ", 0)
+			l.Printf("Unauthorized get facts attempt: %v", err)
+		}
+		Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	} else if clientID, ok := claims["id"].(string); !ok || clientID != "admin" {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetFacts]")+" ", 0)
+			l.Printf("Unauthorized get facts attempt with invalid token: %v", claims)
+		}
+		Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	if room, err := e.searchRoom(id); err != nil {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetFacts]")+" ", 0)
+			l.Printf("Room not found: %v", err)
+		}
 		Error(w, http.StatusNotFound, "room not found")
 		return
 	} else {
 		facts, err := room.clipsInstance.QueryFactsAllFacts()
 		if err != nil {
+			if e.Debug {
+				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetFacts]")+" ", 0)
+				l.Printf("Failed to get facts in room %s: %v", id, err)
+			}
 			Error(w, http.StatusInternalServerError, "failed to get facts")
 			return
+		}
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, green("[rulemancer/apiGetFacts]")+" ", 0)
+			l.Printf("Facts in room %s: %+v", id, facts)
 		}
 		JSON(w, http.StatusOK, map[string]any{
 			"facts": facts,

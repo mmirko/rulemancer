@@ -152,7 +152,7 @@ func (e *Engine) newGame(rulesLocation string) error {
 
 func (e *Engine) generateGameUniqueID() string {
 	for {
-		newId := RandStringBytes(16)
+		newId := randStringBytes(16)
 		if _, exists := e.games[newId]; !exists {
 			return newId
 		}

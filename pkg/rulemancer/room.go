@@ -15,7 +15,7 @@ type Room struct {
 	id            string
 	game          *Game
 	clients       map[string]*Client
-	numClients    int
+	maxClients    int
 	clientsMutex  sync.RWMutex
 	watchers      map[string]*Client
 	watchersMutex sync.RWMutex
@@ -52,7 +52,7 @@ func (e *Engine) newRoom(name, description, gameRef string) (*Room, error) {
 		id:            e.generateRoomUniqueID(),
 		game:          game,
 		clipsInstance: cli,
-		numClients:    game.numPlayers,
+		maxClients:    game.numPlayers,
 		clients:       make(map[string]*Client),
 		clientsMutex:  sync.RWMutex{},
 		watchers:      make(map[string]*Client),
@@ -66,7 +66,7 @@ func (e *Engine) newRoom(name, description, gameRef string) (*Room, error) {
 
 func (e *Engine) generateRoomUniqueID() string {
 	for {
-		newId := RandStringBytes(16)
+		newId := randStringBytes(16)
 		if _, exists := e.rooms[newId]; !exists {
 			return newId
 		}

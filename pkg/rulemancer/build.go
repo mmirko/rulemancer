@@ -313,7 +313,7 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 			case "assert.sh":
 				for ass := range pd.Assertables {
 					pd.CurrentAssert = ass
-					outputFilePath := fmt.Sprintf("%s/%s/assert_%s.sh", shellOutdir, gameName, ass)
+					outputFilePath := fmt.Sprintf("%s/%s/assert-%s.sh", shellOutdir, gameName, ass)
 					if err := e.commitTemplate(tmpl, templateContent, outputFilePath, pd, gameName, templateName); err != nil {
 						return err
 					}
@@ -321,7 +321,7 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 			case "query.sh":
 				for query := range pd.Queryables {
 					pd.CurrentQuery = query
-					outputFilePath := fmt.Sprintf("%s/%s/query_%s.sh", shellOutdir, gameName, query)
+					outputFilePath := fmt.Sprintf("%s/%s/query-%s.sh", shellOutdir, gameName, query)
 					if err := e.commitTemplate(tmpl, templateContent, outputFilePath, pd, gameName, templateName); err != nil {
 						return err
 					}
