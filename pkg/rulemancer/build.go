@@ -11,6 +11,7 @@ import (
 
 type ProtocolData struct {
 	*Engine
+	GameName      string
 	CurrentAssert string
 	CurrentQuery  string
 	Assertables   map[string][]string
@@ -265,6 +266,7 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 		rf.Assertables = game.assertable
 		rf.Responses = game.responses
 		rf.Queryables = game.queryable
+		rf.GameName = gameName
 
 		gamesInterfaces[gameName] = rf
 	}

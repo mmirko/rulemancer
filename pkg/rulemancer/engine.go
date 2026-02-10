@@ -79,6 +79,7 @@ func (e *Engine) SpawnEngine() error {
 		r.Route("/game", e.gameRoutes)
 		r.Route("/join", e.joinRoutes)
 		r.Route("/watch", e.watchRoutes)
+		r.Route("/new", e.newRoutes)
 	})
 
 	srv := &http.Server{
