@@ -18,6 +18,7 @@ type Game struct {
 	responses     map[string][]string
 	queryable     map[string][]string
 	runningRooms  map[string]*Room
+	partialRooms  map[string]*Room
 	roomsMutex    sync.RWMutex
 }
 
@@ -137,6 +138,7 @@ func (e *Engine) newGame(rulesLocation string) error {
 		queryable:     queryableFacts,
 		id:            e.generateGameUniqueID(),
 		runningRooms:  make(map[string]*Room),
+		partialRooms:  make(map[string]*Room),
 		roomsMutex:    sync.RWMutex{},
 	}
 	e.numGames++

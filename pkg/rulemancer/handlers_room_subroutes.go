@@ -59,14 +59,14 @@ func (e *Engine) apiAssert(w http.ResponseWriter, r *http.Request) {
 			requester = clientID
 		}
 
-		canQuery := false
+		canAssert := false
 		room.clientsMutex.RLock()
 		if _, ok := room.clients[requester]; ok {
-			canQuery = true
+			canAssert = true
 		}
 		room.clientsMutex.RUnlock()
 
-		if !canQuery {
+		if !canAssert {
 			if e.Debug {
 				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiAssert]")+" ", 0)
 				l.Printf("Forbidden assert attempt in room %s by %s", id, requester)

@@ -24,6 +24,23 @@ func (e *Engine) gameRoutes(r chi.Router) {
 func (e *Engine) apiGetGame(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetGame]")+" ", 0)
+			l.Printf("Unauthorized get game attempt: %v", err)
+		}
+		Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	} else if clientID, ok := claims["id"].(string); !ok || clientID != "admin" {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetGame]")+" ", 0)
+			l.Printf("Unauthorized get game attempt with invalid token: %v", claims)
+		}
+		Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	if game, err := e.searchGame(id); err != nil {
 		if e.Debug {
 			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetGame]")+" ", 0)
@@ -34,21 +51,41 @@ func (e *Engine) apiGetGame(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if e.Debug {
 			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, green("[rulemancer/apiGetGame]")+" ", 0)
-			l.Printf("Game %s info provided to client %s", game.id, id)
+			l.Printf("Game %s info provided to client admin", id)
 		}
 		JSON(w, http.StatusOK, map[string]any{
-			"id":          game.id,
-			"name":        game.name,
-			"description": game.description,
-			"rules":       game.rulesLocation,
-			"assertable":  game.assertable,
-			"responses":   game.responses,
-			"queryable":   game.queryable,
+			"id":           game.id,
+			"name":         game.name,
+			"description":  game.description,
+			"rules":        game.rulesLocation,
+			"assertable":   game.assertable,
+			"responses":    game.responses,
+			"queryable":    game.queryable,
+			"playingRooms": game.runningRooms,
+			"waitingRooms": game.partialRooms,
 		})
 	}
 }
 
 func (e *Engine) apiListGames(w http.ResponseWriter, r *http.Request) {
+
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiListGames]")+" ", 0)
+			l.Printf("Unauthorized list games attempt: %v", err)
+		}
+		Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	} else if _, ok := claims["id"].(string); !ok {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiListGames]")+" ", 0)
+			l.Printf("Unauthorized list games attempt with invalid token: %v", claims)
+		}
+		Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	if e.Debug {
 		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, green("[rulemancer/apiListGames]")+" ", 0)
 		l.Printf("Listing all games")

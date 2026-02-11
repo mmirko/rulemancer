@@ -61,6 +61,11 @@ func (e *Engine) newRoom(name, description, gameRef string) (*Room, error) {
 	}
 	e.numRooms++
 	e.rooms[room.id] = room
+
+	game.roomsMutex.Lock()
+	defer game.roomsMutex.Unlock()
+	game.partialRooms[room.id] = room
+
 	return room, nil
 }
 

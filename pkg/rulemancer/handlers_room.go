@@ -93,12 +93,14 @@ func (e *Engine) apiGetRoom(w http.ResponseWriter, r *http.Request) {
 			l.Printf("Room info provided to client: %v", room)
 		}
 		JSON(w, http.StatusOK, map[string]any{
-			"id":             room.id,
-			"name":           room.name,
-			"description":    room.description,
-			"clips_instance": room.clipsInstance.Info(),
-			"running_game":   room.game.Info(),
-			"num_clients":    room.maxClients,
+			"id":               room.id,
+			"name":             room.name,
+			"description":      room.description,
+			"clips_instance":   room.clipsInstance.Info(),
+			"running_game":     room.game.name,
+			"num_clients":      room.maxClients,
+			"playing_clients":  room.clients,
+			"watching_clients": room.watchers,
 		})
 	}
 }
