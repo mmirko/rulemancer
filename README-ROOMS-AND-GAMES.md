@@ -314,13 +314,13 @@ source launch.sh
 source client-create.sh
 
 # Join a new game
-source join-new.sh tictactoe
+./join-new.sh tictactoe
 
 # Make a move (scripts are game-specific)
-source tictactoe_move.sh $ROOM_ID 1 1 x
+./tictactoe_move.sh $ROOM_ID 1 1 x
 
 # Query state
-source query.sh $ROOM_ID cell
+./query.sh $ROOM_ID cell
 ```
 
 ## Debugging
