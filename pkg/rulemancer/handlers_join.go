@@ -44,7 +44,7 @@ func (e *Engine) availableRoom(w http.ResponseWriter, r *http.Request) {
 		Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	} else {
-		clientID := id
+		clientID = id
 		if c, err := e.searchClient(clientID); err != nil {
 			// Client existence
 			if e.Debug {
@@ -72,7 +72,7 @@ func (e *Engine) availableRoom(w http.ResponseWriter, r *http.Request) {
 	if len(game.partialRooms) == 0 {
 		game.roomsMutex.Unlock()
 		if e.Debug {
-			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/availableRoom]")+" ", 0)
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/availableRoom]")+" ", 0)
 			l.Printf("No available rooms for game: %s, creating a new one", gameRef)
 		}
 		e.newGameRoom(w, r)
@@ -149,7 +149,7 @@ func (e *Engine) availableRoom(w http.ResponseWriter, r *http.Request) {
 	client.playingRooms[roomId] = room
 	if e.Debug {
 		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, green("[rulemancer/availableRoom]")+" ", 0)
-		l.Printf("Client joined room: %s", roomId)
+		l.Printf("Client %s joined room: %s", clientID, roomId)
 	}
 	JSON(w, http.StatusOK, map[string]string{"status": "room found and joined"})
 
@@ -266,7 +266,7 @@ func (e *Engine) joinRoom(w http.ResponseWriter, r *http.Request) {
 			client.playingRooms[roomId] = room
 			if e.Debug {
 				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, green("[rulemancer/joinRoom]")+" ", 0)
-				l.Printf("Client joined room: %s", roomId)
+				l.Printf("Client %s joined room: %s", clientID, roomId)
 			}
 			JSON(w, http.StatusOK, map[string]string{"status": "joined"})
 			return
@@ -400,7 +400,7 @@ func (e *Engine) newGameRoom(w http.ResponseWriter, r *http.Request) {
 			client.playingRooms[roomId] = room
 			if e.Debug {
 				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, green("[rulemancer/joinRoom]")+" ", 0)
-				l.Printf("Client joined room: %s", roomId)
+				l.Printf("Client %s joined room: %s", clientID, roomId)
 			}
 			JSON(w, http.StatusOK, map[string]string{"status": "room created and joined"})
 			return
