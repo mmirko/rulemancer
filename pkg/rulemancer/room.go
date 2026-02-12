@@ -7,7 +7,15 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
+
+type socketMessage struct {
+	message []byte
+}
+
+type socketChan chan socketMessage
 
 type Room struct {
 	name          string
@@ -19,10 +27,33 @@ type Room struct {
 	clientsMutex  sync.RWMutex
 	watchers      map[string]*Client
 	watchersMutex sync.RWMutex
+	sockets       map[*websocket.Conn]socketChan
+	socketsMutex  sync.RWMutex
 	clipsInstance *ClipsInstance
 	lastActive    int64
 }
 
+func (r *Room) socketsInfo() []string {
+	r.socketsMutex.RLock()
+	defer r.socketsMutex.RUnlock()
+	sockets := make([]string, 0, len(r.sockets))
+	for conn := range r.sockets {
+		sockets = append(sockets, conn.RemoteAddr().String())
+	}
+	return sockets
+}
+
+func (r *Room) broadcast(message []byte) {
+	r.socketsMutex.RLock()
+	defer r.socketsMutex.RUnlock()
+	for conn := range r.sockets {
+		select {
+		case r.sockets[conn] <- socketMessage{message: message}:
+		default:
+			// TODO If the channel is blocked, we can choose to drop the message or handle it differently
+		}
+	}
+}
 func (e *Engine) newRoom(name, description, gameRef string) (*Room, error) {
 
 	game, err := e.searchGame(gameRef)
@@ -57,6 +88,8 @@ func (e *Engine) newRoom(name, description, gameRef string) (*Room, error) {
 		clientsMutex:  sync.RWMutex{},
 		watchers:      make(map[string]*Client),
 		watchersMutex: sync.RWMutex{},
+		sockets:       make(map[*websocket.Conn]socketChan),
+		socketsMutex:  sync.RWMutex{},
 		lastActive:    time.Now().Unix(),
 	}
 	e.numRooms++

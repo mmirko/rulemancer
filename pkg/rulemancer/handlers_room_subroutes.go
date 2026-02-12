@@ -23,6 +23,8 @@ func (e *Engine) roomSubRoutes(r chi.Router) {
 			l.Printf("Debug mode enabled: adding /facts endpoints")
 			r.Get("/facts", e.apiGetFacts)
 		}
+
+		r.HandleFunc("/ws", e.roomMonitor)
 	})
 }
 
@@ -140,6 +142,12 @@ func (e *Engine) apiAssert(w http.ResponseWriter, r *http.Request) {
 					ci.Unlock()
 					Error(w, http.StatusInternalServerError, "failed to assert")
 					return
+				} else {
+					if e.Debug {
+						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiAssert]")+" ", 0)
+						l.Printf("Successfully asserted fact in room %s: %s", id, fact)
+					}
+					room.broadcast([]byte("asserted " + fact))
 				}
 			}
 

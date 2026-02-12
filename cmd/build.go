@@ -1,5 +1,5 @@
 /*
-Copyright © 2025 Mirko Mariotti mirko@mirkomariotti.it
+Copyright © 2026 Mirko Mariotti mirko@mirkomariotti.it
 */
 package cmd
 
@@ -15,7 +15,7 @@ var interfaceDir string
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
 	Use:   "build",
-	Short: "Build the engine extra elements (experimental)",
+	Short: "Build the engine extra elements",
 	Long:  `Write extra elements for games, things like call from curl, JSON interfaces and other stuff.`,
 	Run: func(cmd *cobra.Command, args []string) {
 

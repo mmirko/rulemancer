@@ -20,6 +20,7 @@ func (e *Engine) systemRoutes(r chi.Router) {
 	r.Route("/", func(r chi.Router) {
 		r.Get("/health", e.health)
 		r.Post("/quit", e.quit)
+		r.HandleFunc("/ws", e.systemMonitor)
 	})
 }
 

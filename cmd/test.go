@@ -1,5 +1,5 @@
 /*
-Copyright © 2025 Mirko Mariotti mirko@mirkomariotti.it
+Copyright © 2026 Mirko Mariotti mirko@mirkomariotti.it
 */
 package cmd
 

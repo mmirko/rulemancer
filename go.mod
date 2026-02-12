@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.4 // indirect
 	github.com/go-chi/jwtauth/v5 v5.3.3 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/goware/jwtutil v0.6.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.2 // indirect

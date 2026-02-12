@@ -1,5 +1,5 @@
 /*
-Copyright © 2025 Mirko Mariotti mirko@mirkomariotti.it
+Copyright © 2026 Mirko Mariotti mirko@mirkomariotti.it
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
