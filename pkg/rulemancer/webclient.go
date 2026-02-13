@@ -1,34 +1,15 @@
 package rulemancer
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	chi "github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
-type WebClient struct {
-	*Config
-	router   chi.Router
-	stopChan chan os.Signal
-}
-
-func NewWebClient(secret string) *WebClient {
-	return &WebClient{
-		Config:   NewConfig(),
-		router:   chi.NewRouter(),
-		stopChan: make(chan os.Signal, 1),
-	}
-}
-
-func (e *WebClient) templateGenerator(baseDir, templateDir string) (map[string]string, error) {
+func (e *Engine) templateGenerator(baseDir, templateDir string) (map[string]string, error) {
 	templateMap := make(map[string]string)
 
 	if templateFiles, err := os.ReadDir(baseDir + "/" + templateDir); err == nil {
@@ -55,64 +36,27 @@ func (e *WebClient) templateGenerator(baseDir, templateDir string) (map[string]s
 	return templateMap, nil
 }
 
-func (e *WebClient) handlerGenerator(path string, templateMap map[string]string) http.HandlerFunc {
+func (e *Engine) handlerGenerator(path string, templateMap map[string]string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(templateMap[path]))
 	}
 }
 
-func (e *WebClient) SpawnWebClient(baseURL string) error {
-
-	// e.loadGames()
-
-	r := e.router
-	c := e.Config
-
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	if e.Debug {
-		r.Use(middleware.Logger)
-	}
+func (e *Engine) webClientRoutes(r chi.Router) {
 
 	templateDir := "pkg/rulemancer/templates/webclient"
 
 	templateMap, err := e.templateGenerator(templateDir, "")
 	if err != nil {
-		return fmt.Errorf("failed to generate templates: %w", err)
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/SpawnWebClient]")+" ", 0)
+			l.Printf("Failed to generate templates: %v", err)
+		}
 	}
-
 	fmt.Println(templateMap)
-
 	r.Route("/", func(r chi.Router) {
 		for path := range templateMap {
 			r.Get(path, e.handlerGenerator(path, templateMap))
 		}
 	})
-
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
-	}
-
-	go func() {
-		if err := srv.ListenAndServeTLS(c.TLSCertFile, c.TLSKeyFile); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Could not start server: %v\n", err)
-		}
-	}()
-
-	signal.Notify(e.stopChan, os.Interrupt, syscall.SIGTERM)
-	<-e.stopChan
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	log.Println("Shutting down server...")
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
-	}
-
-	log.Println("Server exiting")
-
-	return nil
 }
