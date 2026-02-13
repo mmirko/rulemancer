@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Rulemancer - {{ .GameName }}</title>
+		<style>
+			:root {
+				color-scheme: light;
+				--bg: #f6f8fa;
+				--panel: #ffffff;
+				--text: #1f2328;
+				--muted: #57606a;
+				--border: #d0d7de;
+				--primary: #2f3b52;
+				--primary-weak: #e6ebf2;
+				--danger: #b42318;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+			}
+
+			header {
+				padding: 20px 24px;
+				background: var(--panel);
+				border-bottom: 1px solid var(--border);
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 16px;
+				flex-wrap: wrap;
+			}
+
+			h1 {
+				font-size: 20px;
+				margin: 0;
+			}
+
+			p {
+				margin: 6px 0 0 0;
+				color: var(--muted);
+			}
+
+			main {
+				padding: 24px;
+			}
+
+			.toolbar {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+				flex-wrap: wrap;
+			}
+
+			input[type="text"] {
+				padding: 10px 12px;
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				min-width: 220px;
+			}
+
+			button {
+				padding: 10px 16px;
+				border: 1px solid var(--primary);
+				background: var(--primary);
+				color: #ffffff;
+				border-radius: 6px;
+				cursor: pointer;
+				font-weight: 600;
+			}
+
+			button.secondary {
+				background: #ffffff;
+				color: var(--primary);
+			}
+
+			button:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+
+			.grid-two {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 20px;
+			}
+
+			.panel {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 16px;
+			}
+
+			.panel h2 {
+				margin: 0 0 12px 0;
+				font-size: 16px;
+			}
+
+			.stack {
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+			}
+
+			.card {
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 12px;
+				background: #ffffff;
+			}
+
+			.card h3 {
+				margin: 0 0 10px 0;
+				font-size: 15px;
+			}
+
+			.relation {
+				margin: 0 0 10px 0;
+				padding: 10px;
+				border-radius: 8px;
+				background: var(--primary-weak);
+			}
+
+			.relation strong {
+				display: block;
+				margin-bottom: 8px;
+				font-size: 13px;
+			}
+
+			.field {
+				display: grid;
+				grid-template-columns: 140px 1fr;
+				gap: 8px;
+				align-items: center;
+				margin-bottom: 8px;
+			}
+
+			.field label {
+				font-size: 13px;
+				color: var(--muted);
+				font-weight: 600;
+			}
+
+			.field input {
+				width: 100%;
+				padding: 8px 10px;
+				border: 1px solid var(--border);
+				border-radius: 6px;
+			}
+
+			.response {
+				margin: 10px 0 0 0;
+				background: #0b0f14;
+				color: #e6edf3;
+				padding: 12px;
+				border-radius: 8px;
+				overflow: auto;
+				font-size: 12px;
+				min-height: 84px;
+			}
+
+			.muted {
+				color: var(--muted);
+				font-size: 14px;
+			}
+
+			.error {
+				color: var(--danger);
+			}
+
+			@media (max-width: 980px) {
+				.grid-two {
+					grid-template-columns: 1fr;
+				}
+
+				.field {
+					grid-template-columns: 1fr;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div>
+				<h1>Game interaction: {{ .GameName }}</h1>
+				<p>Run assertions and queries for this game in a selected room.</p>
+			</div>
+			<div class="toolbar">
+				<input id="room-id" type="text" placeholder="Room ID" />
+				<input id="jwt" type="text" placeholder="Client JWT" />
+				<button id="save-jwt" class="secondary" type="button">Save JWT</button>
+			</div>
+		</header>
+
+		<main>
+			<div class="grid-two">
+				<section class="panel">
+					<h2>Assertions</h2>
+					<div class="stack">
+						{{- if .Assertables }}
+						{{- range $assertName, $relations := .Assertables }}
+						<article class="card assert-card" data-assert-name="{{ $assertName }}">
+							<h3>{{ $assertName }}</h3>
+							{{- range $rel := $relations }}
+							<div class="relation" data-relation="{{ $rel }}">
+								<strong>{{ $rel }}</strong>
+								{{- range $slot := index $.Slots $rel }}
+								<div class="field">
+									<label>{{ $slot }}</label>
+									<input
+										type="text"
+										data-kind="slot"
+										data-field-name="{{ $slot }}"
+										placeholder="{{ $slot }}"
+									/>
+								</div>
+								{{- end }}
+								{{- range $ms := index $.Multislots $rel }}
+								<div class="field">
+									<label>{{ $ms }} (comma separated)</label>
+									<input
+										type="text"
+										data-kind="multislot"
+										data-field-name="{{ $ms }}"
+										placeholder="value1, value2"
+									/>
+								</div>
+								{{- end }}
+							</div>
+							{{- end }}
+							<button class="run-assert" type="button">Run assertion</button>
+							<pre class="response">No response yet.</pre>
+						</article>
+						{{- end }}
+						{{- else }}
+						<div class="muted">No assertions available for this game.</div>
+						{{- end }}
+					</div>
+				</section>
+
+				<section class="panel">
+					<h2>Queries</h2>
+					<div class="stack">
+						{{- if .Queryables }}
+						{{- range $queryName, $_ := .Queryables }}
+						<article class="card query-card" data-query-name="{{ $queryName }}">
+							<h3>{{ $queryName }}</h3>
+							<button class="run-query" type="button">Run query</button>
+							<pre class="response">No response yet.</pre>
+						</article>
+						{{- end }}
+						{{- else }}
+						<div class="muted">No queries available for this game.</div>
+						{{- end }}
+					</div>
+				</section>
+			</div>
+		</main>
+
+		<script>
+			(function () {
+				const roomIdInput = document.getElementById('room-id');
+				const jwtInput = document.getElementById('jwt');
+				const saveJwtButton = document.getElementById('save-jwt');
+
+				const JWT_STORAGE_KEY = 'rulemancer-client-jwt';
+				jwtInput.value = localStorage.getItem(JWT_STORAGE_KEY) || '';
+
+				saveJwtButton.addEventListener('click', function () {
+					localStorage.setItem(JWT_STORAGE_KEY, jwtInput.value.trim());
+				});
+
+				function parseMultislot(value) {
+					return value
+						.split(',')
+						.map(function (part) {
+							return part.trim();
+						})
+						.filter(function (part) {
+							return part.length > 0;
+						});
+				}
+
+				function showResponse(target, payload) {
+					target.classList.remove('error');
+					target.textContent = JSON.stringify(payload, null, 2);
+				}
+
+				function showError(target, message, details) {
+					target.classList.add('error');
+					if (details) {
+						target.textContent = message + '\n' + JSON.stringify(details, null, 2);
+						return;
+					}
+					target.textContent = message;
+				}
+
+				function getHeaders() {
+					const jwt = jwtInput.value.trim();
+					const headers = {
+						'Content-Type': 'application/json'
+					};
+					if (jwt) {
+						headers.Authorization = 'Bearer ' + jwt;
+					}
+					return headers;
+				}
+
+				function requiredRoomId(target) {
+					const roomId = roomIdInput.value.trim();
+					if (!roomId) {
+						showError(target, 'Room ID is required.');
+						return null;
+					}
+					return roomId;
+				}
+
+				document.querySelectorAll('.run-assert').forEach(function (button) {
+					button.addEventListener('click', async function () {
+						const card = button.closest('.assert-card');
+						const response = card.querySelector('.response');
+						const roomId = requiredRoomId(response);
+						if (!roomId) {
+							return;
+						}
+
+						const assertName = card.dataset.assertName;
+						const payload = {};
+
+						card.querySelectorAll('.relation').forEach(function (relationBlock) {
+							const relationName = relationBlock.dataset.relation;
+							const relationPayload = {};
+
+							relationBlock.querySelectorAll('input[data-field-name]').forEach(function (input) {
+								const fieldName = input.dataset.fieldName;
+								const kind = input.dataset.kind;
+								const rawValue = input.value.trim();
+
+								if (kind === 'multislot') {
+									relationPayload[fieldName] = parseMultislot(rawValue);
+								} else {
+									relationPayload[fieldName] = [rawValue];
+								}
+							});
+
+							payload[relationName] = [relationPayload];
+						});
+
+						button.disabled = true;
+						response.classList.remove('error');
+						response.textContent = 'Loading...';
+
+						try {
+							const res = await fetch('/api/v1/room/' + encodeURIComponent(roomId) + '/assert/' + encodeURIComponent(assertName), {
+								method: 'POST',
+								headers: getHeaders(),
+								body: JSON.stringify(payload)
+							});
+
+							let data = null;
+							try {
+								data = await res.json();
+							} catch (_ignored) {}
+
+							if (!res.ok) {
+								showError(response, 'Request failed (' + res.status + ').', data);
+								return;
+							}
+
+							showResponse(response, data);
+						} catch (err) {
+							showError(response, 'Network error.', { message: err.message });
+						} finally {
+							button.disabled = false;
+						}
+					});
+				});
+
+				document.querySelectorAll('.run-query').forEach(function (button) {
+					button.addEventListener('click', async function () {
+						const card = button.closest('.query-card');
+						const response = card.querySelector('.response');
+						const roomId = requiredRoomId(response);
+						if (!roomId) {
+							return;
+						}
+
+						const queryName = card.dataset.queryName;
+
+						button.disabled = true;
+						response.classList.remove('error');
+						response.textContent = 'Loading...';
+
+						try {
+							const res = await fetch('/api/v1/room/' + encodeURIComponent(roomId) + '/query/' + encodeURIComponent(queryName), {
+								method: 'POST',
+								headers: getHeaders()
+							});
+
+							let data = null;
+							try {
+								data = await res.json();
+							} catch (_ignored) {}
+
+							if (!res.ok) {
+								showError(response, 'Request failed (' + res.status + ').', data);
+								return;
+							}
+
+							showResponse(response, data);
+						} catch (err) {
+							showError(response, 'Network error.', { message: err.message });
+						} finally {
+							button.disabled = false;
+						}
+					});
+				});
+			})();
+		</script>
+	</body>
+</html>
