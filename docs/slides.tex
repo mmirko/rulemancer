@@ -277,64 +277,55 @@ for different functionalities:
 \end{itemize}
 \end{frame}
 
-% \begin{frame}{Core Features}
-% \begin{itemize}
-%   \item CLIPS integration for inference and fact management.
-%   \item Multi-game support from one server process.
-%   \item Room isolation for concurrent matches.
-%   \item Client + watcher model (players and spectators).
-%   \item Dynamic web pages under \texttt{/api/v1/web/...}.
-% \end{itemize}
-% \end{frame}
 
+\begin{frame}{Game and Room Endpoints (Some)}
+Th admin JWT can be used to access system-level endpoints for managing games and rooms, such as listing available games, 
+inspecting game schemas, creating new rooms, and listing/inspecting existing rooms. Here are some examples: \\
+\vspace{0.3cm}
+\begin{itemize}
+  \item List games: \texttt{GET /api/v1/game/list}
+  \item Inspect game schema: \texttt{GET /api/v1/game/\{id\}}
+  \item Create room: \texttt{POST /api/v1/room/create}
+  \item List rooms: \texttt{GET /api/v1/room/list}
+  \item Inspect room: \texttt{GET /api/v1/room/\{id\}}
+\end{itemize}
+\vspace{0.3cm}
+Scripts are provided in the generated interface files to perform these actions with cURL, using the admin token for authentication.
+\end{frame}
 
-% \begin{frame}{Security Model (JWT)}
-% \begin{itemize}
-%   \item New clients are created without auth: \texttt{POST /api/v1/new/client}.
-%   \item Response returns \texttt{id} and \texttt{api\_token}.
-%   \item All protected routes require:
-%   \begin{itemize}
-%     \item \texttt{Authorization: Bearer <token>}
-%   \end{itemize}
-%   \item Admin token is required for system operations (health/quit/system WS).
-% \end{itemize}
-% \end{frame}
+\begin{frame}{Joining and Watching Rooms}
+Players can join rooms using the \texttt{/join} endpoint, which assigns them to an available room of the specified game and returns the room context and player token. \\
+\vspace{0.3cm}
+Watchers can connect to rooms using the \texttt{/watch} endpoint, which allows them to receive live updates from the room without participating as players. \\
+\vspace{0.3cm}
+Example endpoints:
+\begin{itemize}
+  \item Join room: \texttt{POST /api/v1/join/available/\{gameName\}}
+  \item Watch room: \texttt{POST /api/v1/room/\{id\}/watch}
+\end{itemize}
+\vspace{0.3cm}
+The generated interface scripts include cURL commands for these interactions, which handle the necessary authentication and context management for players and watchers.
+\end{frame}
 
-
-% \begin{frame}{Typical Player Journey}
-% \begin{enumerate}
-%   \item \texttt{POST /new/client} to obtain token.
-%   \item Join game (\texttt{/join/available/\{game\}} or \texttt{/join/new/\{game\}}).
-%   \item Assert actions (\texttt{/room/\{id\}/assert/\{action\}}).
-%   \item Query state (\texttt{/room/\{id\}/query/\{query\}}).
-%   \item Subscribe to room websocket for live updates.
-% \end{enumerate}
-% \end{frame}
-
-% \begin{frame}{Game and Room Endpoints (Examples)}
-% \begin{itemize}
-%   \item List games: \texttt{GET /api/v1/game/list}
-%   \item Inspect game schema: \texttt{GET /api/v1/game/\{id\}}
-%   \item Create room: \texttt{POST /api/v1/room/create}
-%   \item List rooms: \texttt{GET /api/v1/room/list}
-%   \item Inspect room: \texttt{GET /api/v1/room/\{id\}}
-% \end{itemize}
-% \end{frame}
-
-% \begin{frame}{Assert and Query Endpoints}
-% \begin{itemize}
-%   \item Assert action:
-%   \begin{itemize}
-%     \item \texttt{POST /api/v1/room/\{id\}/assert/move}
-%   \end{itemize}
-%   \item Query state:
-%   \begin{itemize}
-%     \item \texttt{POST /api/v1/room/\{id\}/query/cell}
-%     \item \texttt{POST /api/v1/room/\{id\}/query/winner}
-%   \end{itemize}
-%   \item Response envelope format: \texttt{\{ "response": \{ ... \} \}}
-% \end{itemize}
-% \end{frame}
+\begin{frame}{Assert and Query Endpoints (Players and Watchers)}
+Players and watchers can interact with rooms through the assert and query endpoints,
+which allow them to perform game actions and retrieve game state information according to the defined CLIPS rules. \\
+\vspace{0.3cm}
+\begin{itemize}
+  \item Assert action:
+  \begin{itemize}
+    \item \texttt{POST /api/v1/room/\{id\}/assert/\{action\}}
+    \item Response envelope format: \texttt{\{ "response": \{ ... \} \}}
+  \end{itemize}
+  \item Query state:
+  \begin{itemize}
+    \item \texttt{POST /api/v1/room/\{id\}/query/\{query\}}
+  \end{itemize}
+\end{itemize}
+\vspace{0.3cm}
+Also in this case, the generated interface scripts include cURL commands 
+for performing these interactions based on the CLIPS-defined assertable and queryable facts for each game.
+\end{frame}
 
 \begin{frame}{Real-Time Communication}
 The client interactions described so far are based on a request-response model using REST API,
@@ -356,15 +347,6 @@ and state changes. \\
 \end{frame}
 
 
-% \begin{frame}{Example: Tic-Tac-Toe}
-% \begin{itemize}
-%   \item Assertable: \texttt{move}
-%   \item Results relation: \texttt{last-move}
-%   \item Queryables: \texttt{winner}, \texttt{cell}
-%   \item Demonstrates complete flow from action submission to board/winner retrieval.
-% \end{itemize}
-% \end{frame}
-
 \begin{frame}{Web Interface (Built-In for Game Development and Debugging)}
 The engine includes a built-in web interface for monitoring and interacting with games, 
 which is automatically generated from templates at startup. \\
@@ -385,22 +367,44 @@ Characteristics of the web interface:
 \end{frame}
 
 \begin{frame}{Admin Dashboard Capabilities}
+\small
+The admin dashboard provides a comprehensive overview of the server's state and activity, including:
+\begin{columns}
+\begin{column}{0.3\textwidth}
 \begin{itemize}
   \item Login with admin JWT.
   \item Browse games, rooms, and clients.
   \item Inspect object details and payloads.
   \item Connect to system websockets for live monitoring of server events.
 \end{itemize}
+\end{column}
+\begin{column}{0.7\textwidth}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{admindashboard.png}
+\end{center}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Game Client Page Capabilities}
+\small
+The game client pages provide an interface for players and watchers to interact with specific games and rooms. This 
+is useful for rapid prototyping and debugging game interfaces. \\
+\begin{columns}
+\begin{column}{0.3\textwidth} 
 \begin{itemize}
   \item Enter JWT + room context.
   \item Render assert forms from game protocol data.
   \item Trigger query actions and view structured responses.
   \item Open websocket stream for live room events.
-  \item Useful for rapid prototyping and debugging game interfaces.
 \end{itemize}
+\end{column}
+\begin{column}{0.7\textwidth}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{gamedashboard.png}
+\end{center}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}[fragile]{Appendix A — Useful cURL Snippets}
