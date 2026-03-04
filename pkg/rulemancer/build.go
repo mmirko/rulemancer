@@ -6,23 +6,25 @@ import (
 	"log"
 	"math"
 	"os"
+	"strings"
 	"text/template"
 )
 
 type ProtocolData struct {
 	*Engine
-	GameName            string              // Name of the game
-	GameNames           []string            // List of all game names
-	CurrentAssert       string              // The name of the current assert (used in assertions)
-	CurrentAssertParams []string            // The union of the sets of assertions parameters (used in assertions)
-	CurrentQuery        string              // The name of the current query (used in queries)
-	Assertables         map[string][]string // Assertable of the game
-	Responses           map[string][]string // Responses of the game
-	Queryables          map[string][]string // Queryable of the game
-	Relations           []string            // Relations of the game
-	Slots               map[string][]string // Slots of the game
-	Multislots          map[string][]string // Multislots of the game
-	funcMap             template.FuncMap
+	GameName               string              // Name of the game
+	GameNames              []string            // List of all game names
+	CurrentAssert          string              // The name of the current assert (used in assertions)
+	CurrentAssertRelations []string            // The relations involved in the current assert (used in assertions)
+	CurrentAssertParams    []string            // The union of the sets of assertions parameters (used in assertions)
+	CurrentQuery           string              // The name of the current query (used in queries)
+	Assertables            map[string][]string // Assertable of the game
+	Responses              map[string][]string // Responses of the game
+	Queryables             map[string][]string // Queryable of the game
+	Relations              []string            // Relations of the game
+	Slots                  map[string][]string // Slots of the game
+	Multislots             map[string][]string // Multislots of the game
+	funcMap                template.FuncMap
 }
 
 func (e *Engine) newProtocolData(withFuncMap bool) *ProtocolData {
@@ -98,6 +100,9 @@ func (e *Engine) newProtocolData(withFuncMap bool) *ProtocolData {
 				dict[key] = values[i+1]
 			}
 			return dict, nil
+		},
+		"tovar": func(a string) string {
+			return strings.ReplaceAll(a, "-", "_")
 		},
 	}
 	return &ProtocolData{Engine: e, Slots: slots, Multislots: multislots, funcMap: funcMap}
@@ -228,6 +233,7 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 			case "assert.sh":
 				for ass := range pd.Assertables {
 					pd.CurrentAssert = ass
+					pd.CurrentAssertRelations = pd.Assertables[ass]
 					pd.CurrentAssertParams = make([]string, 0)
 					for _, rel := range pd.Assertables[ass] {
 						if _, ok := pd.Slots[rel]; ok {
