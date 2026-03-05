@@ -1,0 +1,15 @@
+(deffunction other-player (?player)
+  (if (eq ?player p1) then p2 else p1))
+
+(deffunction next-phase (?current-phase)
+  (switch ?current-phase
+    (case untap then upkeep)
+    (case upkeep then draw)
+    (case draw then main1)
+    (case main1 then combat-declare-attackers)
+    (case combat-declare-attackers then combat-declare-blockers)
+    (case combat-declare-blockers then combat-damage)
+    (case combat-damage then main2)
+    (case main2 then end)
+    (case end then untap)
+    (default game-over)))
