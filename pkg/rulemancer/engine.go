@@ -22,6 +22,12 @@ import (
 type Engine struct {
 	*Config
 	*jwtauth.JWTAuth
+	bridges      map[string]*Bridge
+	bridgesMutex sync.RWMutex
+	numBridges   int
+	brRooms      map[string]*BrRoom
+	brRoomsMutex sync.RWMutex
+	numBrRooms   int
 	games        map[string]*Game
 	gamesMutex   sync.RWMutex
 	numGames     int
@@ -39,6 +45,10 @@ func NewEngine(secret string) *Engine {
 	return &Engine{
 		Config:       NewConfig(),
 		JWTAuth:      jwtauth.New("HS256", []byte(secret), nil),
+		bridges:      make(map[string]*Bridge),
+		bridgesMutex: sync.RWMutex{},
+		brRooms:      make(map[string]*BrRoom),
+		brRoomsMutex: sync.RWMutex{},
 		games:        make(map[string]*Game),
 		gamesMutex:   sync.RWMutex{},
 		numGames:     0,
@@ -58,6 +68,7 @@ func (e *Engine) SpawnEngine() error {
 	// using the provided configuration and rule pool directory
 
 	e.loadGames()
+	e.loadBridges()
 
 	_, tokenString, _ := e.Encode(map[string]interface{}{"id": "admin"})
 	fmt.Printf("admin jwt: %s\n", tokenString)
@@ -75,6 +86,8 @@ func (e *Engine) SpawnEngine() error {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Route("/system", e.systemRoutes)
 		r.Route("/room", e.roomRoutes)
+		r.Route("/brroom", e.brRoomRoutes)
+		r.Route("/bridge", e.bridgeRoutes)
 		r.Route("/client", e.clientRoutes)
 		r.Route("/game", e.gameRoutes)
 		r.Route("/join", e.joinRoutes)

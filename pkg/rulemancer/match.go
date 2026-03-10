@@ -6,7 +6,8 @@ import (
 	"errors"
 )
 
-func DecodeOneOf[T any](c *Config, data []byte, targets ...*T) (*T, error) {
+func DecodeOneOf[T any, U any](c *Config, data []byte, t1 *T, t2 *U) (any, error) {
+	targets := []any{t1, t2}
 	for _, t := range targets {
 		dec := json.NewDecoder(bytes.NewReader(data))
 		dec.DisallowUnknownFields()

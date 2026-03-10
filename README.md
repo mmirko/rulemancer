@@ -76,7 +76,7 @@ Once the server is running, it will print an admin JWT token to stdout. The API 
 
 #### Shell Script Templates
 
-The `rulemancer build` command generates shell client interfaces from templates located in `pkg/rulemancer/templates/shell/`. These scripts are created in the `interface/` folder for each available game, providing convenient command-line access to the API.
+The `rulemancer build` command generates shell client interfaces from templates located in `pkg/rulemancer/templates/gameshell/`. These scripts are created in the `interface/` folder for each available game, providing convenient command-line access to the API.
 
 #### Documentation
 

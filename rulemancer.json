@@ -6,6 +6,7 @@
 	"tls_cert_file": "server.crt",
 	"tls_key_file": "server.key",
 	"clipsless_mode": false,
-	"games": ["rulepool/tictactoe", "rulepool/magic"]
+	"games": ["rulepool/tictactoe", "rulepool/magic"],
+	"bridges": {"bridge":"rulepool/bridge"}
 }
 

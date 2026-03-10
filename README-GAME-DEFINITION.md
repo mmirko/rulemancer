@@ -171,7 +171,7 @@ The game is ready to be served via Rulemancer!
 
 ## Step 5 (Optional): Shell interface
 
-You can also create a shell interface to interact with your game via command line (using `curl` commands). The `rulemancer build` command can help you set this up by generating the necessary shell scripts based on your game metadata. By default, the shell interface will be created in the `interfaces/shell/` directory.
+You can also create a shell interface to interact with your game via command line (using `curl` commands). The `rulemancer build` command can help you set this up by generating the necessary shell scripts based on your game metadata. By default, the shell interface will be created in the `interfaces/gameshell/` directory.
 The `rulemancer build` command will parse your game CLIPS file to get the assertables, results, and queryables templates and generate the corresponding shell scripts to interact with your game.
 
 ## Complete Example: Tic-Tac-Toe
