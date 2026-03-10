@@ -3,4 +3,4 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
-curl_json GET "/game/list" | jq .
+curl_json GET "/bridge/list" | jq .

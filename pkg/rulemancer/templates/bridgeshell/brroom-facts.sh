@@ -3,6 +3,6 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
-ROOM_ID="${1:?usage: $0 <room_id>}"
+BRROOM_ID="${1:?usage: $0 <brroom_id>}"
 
-curl_json GET "/room/$ROOM_ID/facts" | jq .
+curl_json GET "/brroom/$BRROOM_ID/facts" | jq .

@@ -143,14 +143,14 @@ func (e *Engine) apiListBrRooms(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if e.Debug {
 			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiListBrRooms]")+" ", 0)
-			l.Printf("Unauthorized list rooms attempt: %v", err)
+			l.Printf("Unauthorized list bridge rooms attempt: %v", err)
 		}
 		Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	} else if clientID, ok := claims["id"].(string); !ok || clientID != "admin" {
 		if e.Debug {
 			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiListBrRooms]")+" ", 0)
-			l.Printf("Unauthorized list rooms attempt with invalid token: %v", claims)
+			l.Printf("Unauthorized list bridge rooms attempt with invalid token: %v", claims)
 		}
 		Error(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -158,12 +158,12 @@ func (e *Engine) apiListBrRooms(w http.ResponseWriter, r *http.Request) {
 
 	if e.Debug {
 		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, green("[rulemancer/apiListBrRooms]")+" ", 0)
-		l.Printf("Rooms list provided to client: %v", e.listRooms())
+		l.Printf("Bridge rooms list provided to client: %v", e.listBrRooms())
 	}
 
-	roomsList := e.listRooms()
+	brRoomsList := e.listBrRooms()
 
 	JSON(w, http.StatusOK, map[string]any{
-		"rooms": roomsList,
+		"brrooms": brRoomsList,
 	})
 }

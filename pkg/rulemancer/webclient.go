@@ -27,7 +27,7 @@ func (e *Engine) webClientRoutes(r chi.Router) {
 		}
 		return
 	}
-	fmt.Printf("Web pages ready: %v\n", webPages)
+	// fmt.Printf("Web pages ready: %v\n", webPages)
 	r.Route("/", func(r chi.Router) {
 		for path := range webPages {
 			r.Get(path, e.handlerGenerator(path, webPages))

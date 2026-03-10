@@ -3,6 +3,6 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
-ROOM_ID="${1:?usage: $0 <room_id>}"
+BRROOM_ID="${1:?usage: $0 <brroom_id>}"
 
-curl_json DELETE "/room/$ROOM_ID" | jq .
+curl_json DELETE "/brroom/$BRROOM_ID" | jq .

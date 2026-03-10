@@ -146,7 +146,7 @@ func (pd *ProtocolData) Merge(other *ProtocolData) {
 	}
 }
 
-func (e *Engine) BuildEngineExtras(shellOutdir string) error {
+func (e *Engine) BuildEngineGamesExtras(shellOutdir string) error {
 	// The rebuild engine reads the rules games directories and the assertables,results and querables from there.
 	// Then uses re2c to write the various artifacts needed to interact with the engine.
 
@@ -155,10 +155,10 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 	// Define the templates directory
 	templateDir := "pkg/rulemancer/templates"
 
-	templateMap, err := e.shellTemplates(templateDir)
+	templateMap, err := e.gameShellTemplates(templateDir)
 	if err != nil {
 		if e.Debug {
-			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineGamesExtras]")+" ", 0)
 			l.Printf("Error loading shell templates: %v", err)
 		}
 		return fmt.Errorf("failed to load shell templates: %w", err)
@@ -167,12 +167,12 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 	// Create the output directory if it doesn't exist
 	if _, err := os.Stat(shellOutdir); os.IsNotExist(err) {
 		if e.Debug {
-			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineExtras]")+" ", 0)
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineGamesExtras]")+" ", 0)
 			l.Printf("Output directory does not exist, creating: %s", shellOutdir)
 		}
 		if err := os.MkdirAll(shellOutdir, 0755); err != nil {
 			if e.Debug {
-				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
+				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineGamesExtras]")+" ", 0)
 				l.Printf("Error creating output directory %s: %v", shellOutdir, err)
 			}
 			return fmt.Errorf("failed to create output directory %s: %w", shellOutdir, err)
@@ -183,7 +183,7 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 	gamesInterfaces, err := e.gameInterfaces()
 	if err != nil {
 		if e.Debug {
-			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineGamesExtras]")+" ", 0)
 			l.Printf("Error loading game interfaces: %v", err)
 		}
 		return fmt.Errorf("failed to load game interfaces: %w", err)
@@ -194,7 +194,7 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 
 	for gameName, pd := range gamesInterfaces {
 		if e.Debug {
-			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineExtras]")+" ", 0)
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineGamesExtras]")+" ", 0)
 			l.Printf("Generating shell files for game: %s", gameName)
 		}
 
@@ -202,12 +202,12 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 		gameOutdir := fmt.Sprintf("%s/%s", shellOutdir, gameName)
 		if _, err := os.Stat(gameOutdir); os.IsNotExist(err) {
 			if e.Debug {
-				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineExtras]")+" ", 0)
+				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineGamesExtras]")+" ", 0)
 				l.Printf("Game output directory does not exist, creating: %s", gameOutdir)
 			}
 			if err := os.MkdirAll(gameOutdir, 0755); err != nil {
 				if e.Debug {
-					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineGamesExtras]")+" ", 0)
 					l.Printf("Error creating game output directory %s: %v", gameOutdir, err)
 				}
 				return fmt.Errorf("failed to create game output directory %s: %w", gameOutdir, err)
@@ -219,7 +219,7 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 			tmpl, err := template.New(templateName).Funcs(pd.funcMap).Parse(templateContent)
 			if err != nil {
 				if e.Debug {
-					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineExtras]")+" ", 0)
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineGamesExtras]")+" ", 0)
 					l.Printf("Error parsing template %s for game %s: %v", templateName, gameName, err)
 				}
 				return fmt.Errorf("failed to parse template %s for game %s: %w", templateName, gameName, err)
@@ -269,6 +269,88 @@ func (e *Engine) BuildEngineExtras(shellOutdir string) error {
 			default:
 				outputFilePath := fmt.Sprintf("%s/%s/%s", shellOutdir, gameName, templateName)
 				if err := e.commitTemplate(tmpl, templateContent, outputFilePath, pd, gameName, templateName); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (e *Engine) BuildEngineBridgesExtras(shellOutdir string) error {
+	// The rebuild engine builds shell example for bridge rooms
+
+	e.loadBridges()
+
+	// Define the templates directory
+	templateDir := "pkg/rulemancer/templates"
+
+	templateMap, err := e.bridgeShellTemplates(templateDir)
+	if err != nil {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineBridgesExtras]")+" ", 0)
+			l.Printf("Error loading shell templates: %v", err)
+		}
+		return fmt.Errorf("failed to load shell templates: %w", err)
+	}
+
+	// Create the output directory if it doesn't exist
+	if _, err := os.Stat(shellOutdir); os.IsNotExist(err) {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineBridgesExtras]")+" ", 0)
+			l.Printf("Output directory does not exist, creating: %s", shellOutdir)
+		}
+		if err := os.MkdirAll(shellOutdir, 0755); err != nil {
+			if e.Debug {
+				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineBridgesExtras]")+" ", 0)
+				l.Printf("Error creating output directory %s: %v", shellOutdir, err)
+			}
+			return fmt.Errorf("failed to create output directory %s: %w", shellOutdir, err)
+		}
+	}
+
+	for brName, _ := range e.Bridges {
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineBridgesExtras]")+" ", 0)
+			l.Printf("Generating shell files for bridge: %s", brName)
+		}
+
+		// Create the bridge directory inside the output directory if it doesn't exist
+		bridgeOutdir := fmt.Sprintf("%s/%s", shellOutdir, brName)
+		if _, err := os.Stat(bridgeOutdir); os.IsNotExist(err) {
+			if e.Debug {
+				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineBridgesExtras]")+" ", 0)
+				l.Printf("Bridge output directory does not exist, creating: %s", bridgeOutdir)
+			}
+			if err := os.MkdirAll(bridgeOutdir, 0755); err != nil {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineBridgesExtras]")+" ", 0)
+					l.Printf("Error creating bridge output directory %s: %v", bridgeOutdir, err)
+				}
+				return fmt.Errorf("failed to create bridge output directory %s: %w", bridgeOutdir, err)
+			}
+		}
+
+		pd := e.newProtocolData(true)
+		pd.GameName = brName
+
+		// Execute each template
+		for templateName, templateContent := range templateMap {
+			tmpl, err := template.New(templateName).Funcs(pd.funcMap).Parse(templateContent)
+			if err != nil {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/BuildEngineBridgesExtras]")+" ", 0)
+					l.Printf("Error parsing template %s for bridge %s: %v", templateName, brName, err)
+				}
+				return fmt.Errorf("failed to parse template %s for bridge %s: %w", templateName, brName, err)
+			}
+
+			switch templateName {
+
+			default:
+				outputFilePath := fmt.Sprintf("%s/%s/%s", shellOutdir, brName, templateName)
+				if err := e.commitTemplate(tmpl, templateContent, outputFilePath, pd, brName, templateName); err != nil {
 					return err
 				}
 			}

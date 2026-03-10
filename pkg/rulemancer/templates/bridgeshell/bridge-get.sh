@@ -3,6 +3,6 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
-GAME_ID="${1:?usage: $0 <game_id|game_name>}"
+BRIDGE_ID="${1:?usage: $0 <bridge_id|bridge_name>}"
 
-curl_json GET "/game/$GAME_ID" | jq .
+curl_json GET "/bridge/$BRIDGE_ID" | jq .

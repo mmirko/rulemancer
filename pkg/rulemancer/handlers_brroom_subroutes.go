@@ -5,7 +5,6 @@ package rulemancer
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -29,7 +28,7 @@ func (e *Engine) brRoomSubRoutes(r chi.Router) {
 func (e *Engine) apiBridgeRequest(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	if _, err := e.searchBrRoom(id); err != nil {
+	if brRoom, err := e.searchBrRoom(id); err != nil {
 		if e.Debug {
 			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiBridgeRequest]")+" ", 0)
 			l.Printf("Bridge room not found: %s", id)
@@ -124,44 +123,44 @@ func (e *Engine) apiBridgeRequest(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			// ci := room.clipsInstance
-			// ci.Lock()
+			ci := brRoom.clipsInstance
+			ci.Lock()
 
-			// for _, fact := range facts {
-			// 	if e.Debug {
-			// 		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiBridgeRequest]")+" ", 0)
-			// 		l.Printf("Asserting fact in room %s: %s", id, fact)
-			// 	}
-			// 	if err := ci.AssertFactAtomic(fact); err != nil {
-			// 		if e.Debug {
-			// 			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiBridgeRequest]")+" ", 0)
-			// 			l.Printf("Error asserting fact in room %s - %s: %v", id, fact, err)
-			// 		}
-			// 		ci.Unlock()
-			// 		Error(w, http.StatusInternalServerError, "failed to assert")
-			// 		return
-			// 	} else {
-			// 		if e.Debug {
-			// 			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiBridgeRequest]")+" ", 0)
-			// 			l.Printf("Successfully asserted fact in room %s: %s", id, fact)
-			// 		}
-			// 	}
-			// }
+			for _, fact := range facts {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiBridgeRequest]")+" ", 0)
+					l.Printf("Asserting fact in room %s: %s", id, fact)
+				}
+				if err := ci.AssertFactAtomic(fact); err != nil {
+					if e.Debug {
+						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiBridgeRequest]")+" ", 0)
+						l.Printf("Error asserting fact in room %s - %s: %v", id, fact, err)
+					}
+					ci.Unlock()
+					Error(w, http.StatusInternalServerError, "failed to assert")
+					return
+				} else {
+					if e.Debug {
+						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiBridgeRequest]")+" ", 0)
+						l.Printf("Successfully asserted fact in room %s: %s", id, fact)
+					}
+				}
+			}
 
-			// if err := ci.RunAtomic(); err != nil {
-			// 	if e.Debug {
-			// 		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiBridgeRequest]")+" ", 0)
-			// 		l.Printf("Error running CLIPS in room %s: %v", id, err)
-			// 	}
-			// 	ci.Unlock()
-			// 	Error(w, http.StatusInternalServerError, "failed to run")
-			// 	return
-			// } else {
-			// 	if e.Debug {
-			// 		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiBridgeRequest]")+" ", 0)
-			// 		l.Printf("Successfully ran CLIPS in room %s", id)
-			// 	}
-			// }
+			if err := ci.RunAtomic(); err != nil {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiBridgeRequest]")+" ", 0)
+					l.Printf("Error running CLIPS in room %s: %v", id, err)
+				}
+				ci.Unlock()
+				Error(w, http.StatusInternalServerError, "failed to run")
+				return
+			} else {
+				if e.Debug {
+					l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/apiBridgeRequest]")+" ", 0)
+					l.Printf("Successfully ran CLIPS in room %s", id)
+				}
+			}
 
 			// // Prepare the response
 			// response := make(map[string][]map[string]string)
@@ -226,6 +225,5 @@ func (e *Engine) apiBridgeRequest(w http.ResponseWriter, r *http.Request) {
 				// "response": response,
 			})
 		}
-		fmt.Println("Received bridge request with facts:", facts) // Debug log for received facts
 	}
 }

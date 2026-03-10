@@ -6,7 +6,7 @@ source "$(dirname "$0")/common.sh"
 payload=$(cat <<EOF
 {
   "name": "example-brroom",
-  "bridge_ref": "{{ .BridgeName }}"
+  "bridge_ref": "{{ .GameName }}"
 }
 EOF
 )

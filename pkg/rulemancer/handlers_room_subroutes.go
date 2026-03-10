@@ -253,14 +253,7 @@ func (e *Engine) apiGetFacts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if room, err := e.searchRoom(id); err != nil {
-		if e.Debug {
-			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetFacts]")+" ", 0)
-			l.Printf("Room not found: %v", err)
-		}
-		Error(w, http.StatusNotFound, "room not found")
-		return
-	} else {
+	if room, err := e.searchRoom(id); err == nil {
 		facts, err := room.clipsInstance.QueryFactsAllFacts()
 		if err != nil {
 			if e.Debug {
@@ -277,5 +270,32 @@ func (e *Engine) apiGetFacts(w http.ResponseWriter, r *http.Request) {
 		JSON(w, http.StatusOK, map[string]any{
 			"facts": facts,
 		})
+		return
 	}
+
+	if brRoom, err := e.searchBrRoom(id); err == nil {
+		facts, err := brRoom.clipsInstance.QueryFactsAllFacts()
+		if err != nil {
+			if e.Debug {
+				l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetFacts]")+" ", 0)
+				l.Printf("Failed to get facts in bridge room %s: %v", id, err)
+			}
+			Error(w, http.StatusInternalServerError, "failed to get facts")
+			return
+		}
+		if e.Debug {
+			l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, green("[rulemancer/apiGetFacts]")+" ", 0)
+			l.Printf("Facts in bridge room %s: %+v", id, facts)
+		}
+		JSON(w, http.StatusOK, map[string]any{
+			"facts": facts,
+		})
+		return
+	}
+
+	if e.Debug {
+		l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, red("[rulemancer/apiGetFacts]")+" ", 0)
+		l.Printf("Room or bridge room not found for getting facts: %s", id)
+	}
+	Error(w, http.StatusNotFound, "room or bridge room not found")
 }

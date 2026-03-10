@@ -1,6 +1,6 @@
-(deftemplate test
+(deftemplate first
   (slot x)
   (slot y))
 
 (deffacts start
-  (test (x 0) (y 0)))
+  (first (x 0) (y 0)))

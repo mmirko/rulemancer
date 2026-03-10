@@ -17,6 +17,13 @@ type BrRoom struct {
 
 func (e *Engine) newBrRoom(name, bridgeRef string) (*BrRoom, error) {
 
+	e.brRoomsMutex.Lock()
+	defer e.brRoomsMutex.Unlock()
+
+	if _, exists := e.brRooms[name]; exists {
+		return nil, errors.New("bridge room with this name already exists")
+	}
+
 	bridge, err := e.searchBridge(bridgeRef)
 	if err != nil {
 		return nil, err
@@ -36,20 +43,18 @@ func (e *Engine) newBrRoom(name, bridgeRef string) (*BrRoom, error) {
 			return nil, err
 		}
 	}
-	e.brRoomsMutex.Lock()
-	defer e.brRoomsMutex.Unlock()
 	brRoom := &BrRoom{
 		id:            name,
 		bridge:        bridge,
 		clipsInstance: cli,
 		lastActive:    time.Now().Unix(),
 	}
-	e.numRooms++
+	e.numBrRooms++
 	e.brRooms[brRoom.id] = brRoom
 
 	bridge.BrRoomsMutex.Lock()
 	defer bridge.BrRoomsMutex.Unlock()
-	bridge.runningBrooms[brRoom.id] = brRoom
+	bridge.runningBrRooms[brRoom.id] = brRoom
 
 	return brRoom, nil
 }

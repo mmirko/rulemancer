@@ -62,6 +62,7 @@ func (ci *ClipsInstance) loadGame(rulesLocation string) error {
 		// Load each rule file into CLIPS
 		for _, file := range rulesFiles {
 			if !file.IsDir() {
+				fmt.Printf("Loading CLIPS file: %s\n", file.Name())
 				cfile := C.CString(rulesLocation + "/" + file.Name())
 				defer C.free(unsafe.Pointer(cfile))
 				C.clips_load(ci.cl, cfile)
