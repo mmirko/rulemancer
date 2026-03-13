@@ -1,6 +1,6 @@
 # Rulemancer Game Setup Guide
 
-This guide explains how to set up CLIPS rule files to enable a game to work with Rulemancer.
+This guide explains how to set up CLIPS rule files to enable a game to work with Rulemancer. This only covers game mode rooms.
 
 ## Overview
 
@@ -59,6 +59,8 @@ The engine exposes these queryables as REST endpoints for retrieving game state 
 ```
 
 ## Step-by-Step Setup
+
+This workflow is specifically for games loaded via the `games` config key.
 
 ### Step 1: Create Your Game File
 
@@ -171,7 +173,7 @@ The game is ready to be served via Rulemancer!
 
 ## Step 5 (Optional): Shell interface
 
-You can also create a shell interface to interact with your game via command line (using `curl` commands). The `rulemancer build` command can help you set this up by generating the necessary shell scripts based on your game metadata. By default, the shell interface will be created in the `interfaces/shell/` directory.
+You can also create a shell interface to interact with your game via command line (using `curl` commands). The `rulemancer build` command can help you set this up by generating the necessary shell scripts based on your game metadata. By default, the shell interface will be created in the `interfaces/gameshell/` directory.
 The `rulemancer build` command will parse your game CLIPS file to get the assertables, results, and queryables templates and generate the corresponding shell scripts to interact with your game.
 
 ## Complete Example: Tic-Tac-Toe

@@ -15,12 +15,13 @@ const (
 )
 
 type Config struct {
-	ClipsLessMode bool     `json:"clipsless_mode"`
-	Debug         bool     `json:"debug"`
-	DebugLevel    int      `json:"debug_level"`
-	TLSCertFile   string   `json:"tls_cert_file"`
-	TLSKeyFile    string   `json:"tls_key_file"`
-	Games         []string `json:"games"`
+	ClipsLessMode bool              `json:"clipsless_mode"`
+	Debug         bool              `json:"debug"`
+	DebugLevel    int               `json:"debug_level"`
+	TLSCertFile   string            `json:"tls_cert_file"`
+	TLSKeyFile    string            `json:"tls_key_file"`
+	Games         []string          `json:"games"`
+	Bridges       map[string]string `json:"bridges"`
 }
 
 func NewConfig() *Config {
@@ -30,6 +31,7 @@ func NewConfig() *Config {
 		TLSCertFile:   "server.crt",
 		TLSKeyFile:    "server.key",
 		Games:         []string{},
+		Bridges:       make(map[string]string),
 	}
 }
 

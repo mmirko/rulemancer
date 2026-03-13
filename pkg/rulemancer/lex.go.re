@@ -37,7 +37,7 @@ func (s *scopeLevel) push(scope int) (*scopeLevel, int) {
 	sl.prev = s
 	s.next = sl
 	if s.Debug {
-		fmt.Println(purple("scope:"), sl)
+//		fmt.Println(purple("scope:"), sl)
 	}
 	return sl, sl.scopeId
 }
@@ -50,7 +50,7 @@ func (s *scopeLevel) pop() (*scopeLevel, int) {
 	s.prev = nil
 	prev.next = nil
 	if s.Debug {
-		fmt.Println(purple("scope:"), prev)
+//		fmt.Println(purple("scope:"), prev)
 	}
 	return prev, prev.scopeId
 }

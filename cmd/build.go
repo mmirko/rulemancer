@@ -29,8 +29,12 @@ var buildCmd = &cobra.Command{
 			}
 		}
 
-		if err := e.BuildEngineExtras(interfaceDir); err != nil {
-			log.Fatalf("Error building engine extras: %v", err)
+		if err := e.BuildEngineGamesExtras(interfaceDir); err != nil {
+			log.Fatalf("Error building engine games extras: %v", err)
+		}
+
+		if err := e.BuildEngineBridgesExtras(interfaceDir); err != nil {
+			log.Fatalf("Error building engine bridges extras: %v", err)
 		}
 	},
 }
