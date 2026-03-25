@@ -86,7 +86,7 @@ Scripts are created under `interface/<name>/` for each configured game and bridg
 
 #### Documentation
 
-- [API Endpoints](README-API.md) - Complete API reference for all endpoints
+- [API Endpoints](https://github.com/mmirko/rulemancer/blob/master/README-API.md) - Complete API reference for all endpoints
 - [Rooms and Games](README-ROOMS-AND-GAMES.md) - Guide for game mode rooms and bridge mode sessions
 - [Game Definition](README-GAME-DEFINITION.md) - How to define new games using CLIPS
 
