@@ -417,7 +417,7 @@ func (e *Engine) gameInterfaces() (map[string]*ProtocolData, error) {
 			// Load each rule file into CLIPS
 			for _, file := range rulesFiles {
 				// load the file
-				if !file.IsDir() {
+				if !file.IsDir() && (file.Name()[len(file.Name())-4:] == ".clp" || file.Name()[len(file.Name())-4:] == ".CLP") {
 					if e.Debug {
 						l := log.New(&writer{os.Stdout, "2006-01-02 15:04:05 "}, yellow("[rulemancer/BuildEngineExtras]")+" ", 0)
 						l.Printf("Processing rule file: %s", file.Name())
