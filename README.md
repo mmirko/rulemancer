@@ -43,7 +43,7 @@ Inside the project directory, you'll find the following key folders:
 - **`cmd/`** - CLI commands (serve, test, build, root)
 - **`pkg/rulemancer/`** - Core engine, CLIPS bindings, HTTP handlers, and game management
 - **`rulepool/`** - CLIPS rule directories loaded by config
-- **`rulepool/tictactoe/`, `rulepool/magic/`** - Game mode rules (multiplayer rooms)
+- **`rulepool/tictactoe/`, `rulepool/magic/`, `rulepool/tressette/`** - Game mode rules (multiplayer rooms)
 - **`rulepool/bridge/`** - Bridge mode rules (direct JSON<->CLIPS)
 - **`interface/`** - Client interface examples and utilities (builded via `rulemancer build`)
 - **`testpool/`** - Test rule files for development (unit tests for Tic-Tac-Toe game logic)
@@ -128,7 +128,7 @@ Edit `rulemancer.json`:
   "tls_cert_file": "server.crt",
   "tls_key_file": "server.key",
   "clipsless_mode": false,
-  "games": ["rulepool/tictactoe", "rulepool/magic"],
+  "games": ["rulepool/tictactoe", "rulepool/magic", "rulepool/tressette"],
   "bridges": {"bridge": "rulepool/bridge"}
 }
 ```
