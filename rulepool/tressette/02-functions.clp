@@ -32,7 +32,7 @@
                else
                 (if (eq ?rank six) then 3
                  else
-                  (if (eq ?rank five) then 2 else 1)))))))))))
+                  (if (eq ?rank five) then 2 else 1))))))))))
 
 (deffunction card-point-thirds (?rank)
   (if (eq ?rank ace) then 3
