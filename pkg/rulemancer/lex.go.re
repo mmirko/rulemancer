@@ -315,6 +315,18 @@ func (e *ProtocolData) Compile(yyinput string) error {
 					prev = yycursor
 					continue
 				}
+			varname {
+					//fmt.Println("multislot varname:", yyinput[prev:yycursor])
+					multiSlotName := yyinput[prev:yycursor]
+					deftempl:= sS.isInsideScope(ScopeDefTemplate)
+					if deftempl != nil && deftempl.name != "" {
+						if multiSlotList, exists := sS.Multislots[deftempl.name]; exists {
+							sS.Multislots[deftempl.name] = append(multiSlotList, multiSlotName)
+						}
+					}
+					prev = yycursor
+					continue
+				}
 			*      {
 					prev = yycursor
 					continue
