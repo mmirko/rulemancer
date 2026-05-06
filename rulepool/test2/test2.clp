@@ -21,4 +21,4 @@
   (retract ?m)
   (retract ?l)
   (assert (last-cast-number (number ?a) (player ?p)))
-  (modify ?number (value ?a)))
+  (assert (number (value ?a))))

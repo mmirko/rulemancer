@@ -14,3 +14,17 @@
 (deftemplate queryable
   (slot name)
   (multislot relations))
+
+(deftemplate condition
+  (slot id)
+  (slot type)
+  (slot operand)
+  (slot value1)
+  (slot value2))
+
+(deftemplate acl
+  (slot chain)
+  (slot position)
+  (multislot conditions)
+  (slot action))
+  
