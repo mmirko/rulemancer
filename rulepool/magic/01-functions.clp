@@ -58,6 +58,8 @@
          (modify ?best-card
             (zone hand)
             (library-position 0)))
+
+   ;(assert (action-result (valid yes) (reason "Card drawn from the top of the library to hand.")))
 )
 
 (deffunction put-all-cards-from-hand-to-library (?player)
@@ -71,6 +73,7 @@
          (zone library)))
 )
 
+;; NON UTILIZZATA
 (deffunction put-n-cards-from-hand-to-library (?player ?n)
    (bind ?count 0)
 
@@ -101,6 +104,7 @@
    (return ?n)
 )
 
+;; NON UTILIZZATA
 (deffunction count-all-player-cards (?player)
 
    (bind ?n 0)
@@ -212,7 +216,7 @@
       )
    )
 
-   ;; rimuove offset 10000 e ripristina i valori da 1 a N
+   ;; rimuove offset 100000 e ripristina i valori da 1 a N
    (do-for-all-facts
       ((?c card))
       (and

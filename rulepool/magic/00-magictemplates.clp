@@ -34,22 +34,33 @@
   (slot phase)         ; start-game-players | initial-draw | start-mulligan | mulligan | mulligan-finalize | untap | upkeep | draw | main1 | combat-declare-attackers | 
                        ; combat-declare-blockers | combat-damage | main2 | end | game-over
   (slot turn-number)   ; current turn number
+  (slot starting-hand-size) ; number of cards in initial hand (7 usually)
   (slot active-player) ; p1 | p2 - player whose turn it is
   (slot priority-player)) ; p1 | p2 - player with priority
 
-; Actions
+(deftemplate starting-draw
+  (slot player-id)     ; p1 | p2
+  (slot counter)       ; number of cards still to draw (starts at starting-hand-size)
+  (slot state)         ; pending | end 
+  )    
 
+; Actions
 (deftemplate mulligan-decision
   (slot player)       ; p1 | p2
   (slot decision))     ; yes | no    
 
 (deftemplate mulligan-state
   (slot player)       ; p1 | p2
-  (slot state))      ; pending | end
+  (slot state)      ; pending | end
+  (slot still-to-draw) ; n cards
+  (slot has-shuffled) ; yes | no
+  (slot has-decided) ; yes | no
+  (slot processed))      ; yes | no
 
 (deftemplate mulligan-yes-counter
   (slot player)       ; p1 | p2
-  (slot counter))      ; number of times the player has mulliganed (starts at 0)
+  (slot counter)    ; number of times the player has mulliganed (starts at 0)
+  (slot temp-counter))     ; temporary counter for drawing cards after mulligan (starts at 0)
 
 (deftemplate mulligan-cards-back-on-library
   (slot player)       ; p1 | p2
