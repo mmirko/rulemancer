@@ -3,7 +3,8 @@
     (phase start-game-players)
     (turn-number 0)
     (active-player none)
-    (priority-player none))
+    (priority-player none)
+    (starting-hand-size 7))
   
   (player-state 
     (player-id p1)
@@ -21,8 +22,20 @@
     (lands-played 0)
     (has-priority no))
   
+  (starting-draw 
+    (player-id p1)
+    (counter 0)
+    (state initialize))
+
+  (starting-draw 
+    (player-id p2)
+    (counter 0)
+    (state initialize))
+
   (action-result (valid none) (reason "Game started."))
   
+
+    
   ;(card (card-id p1-land1) (name "Forest") (type land) (owner p1) (zone hand) (mana-cost 0) (power 0) (toughness 0) (damage 0))
   ;(card (card-id p1-land2) (name "Forest") (type land) (owner p1) (zone hand) (mana-cost 0) (power 0) (toughness 0) (damage 0))
   ;(card (card-id p1-creature1) (name "Grizzly Bears") (type creature) (owner p1) (zone hand) (mana-cost 2) (power 2) (toughness 2) (damage 0))
