@@ -1,3 +1,5 @@
+MINIRULEMANCER_LOCATION := $(shell pwd)/../minirulemancer
+include local.mk
 
 all: rulemancer
 
